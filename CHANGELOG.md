@@ -1,3 +1,12 @@
+# [1.0.0-alpha.3](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.0.0-alpha.2...v1.0.0-alpha.3) (2020-06-04)
+
+
+### Bug Fixes
+
+* **GabcPsalmTone:** Work correctly with English psalm tones that end with puncta inclinata ([f282467](https://gitlab.com/sourceandsummit/gabc-utils/commit/f282467dedf66852f1e6096198b1bc304d9a5cdf))
+
+
+
 # [1.0.0-alpha.2](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.0.0-alpha.1...v1.0.0-alpha.2) (2020-06-04)
 
 

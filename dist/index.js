@@ -622,11 +622,11 @@ var GabcPsalmTone = /** @class */ (function () {
         var gabcPsalmTones = gabcSegments.map(function (gabc) {
             gabc = gabc.replace(/::\s*$/, "").trim();
             if (options.treatAsOneAccentWithXPreparatory) {
-                var match = gabc.match(/\s(([^\sr'])+)$/);
+                var match = gabc.match(/\s(([^\sr',;:])+)$/);
                 if (match) {
                     // jr h i g => jr h i 'g gr g
                     gabc =
-                        gabc.slice(0, -match[0].length) + " '" + match[1] + " " + match[2] + "r " + match[2];
+                        gabc.slice(0, -match[0].length) + " '" + match[1] + " " + match[2].toLowerCase() + "r " + match[2].toLowerCase();
                 }
             }
             return new GabcPsalmTone(gabc, "", true, clef);
