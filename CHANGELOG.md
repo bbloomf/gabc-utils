@@ -1,3 +1,12 @@
+# [1.0.0-alpha.2](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.0.0-alpha.1...v1.0.0-alpha.2) (2020-06-04)
+
+
+### Bug Fixes
+
+* **gabcsyllabified:** update project with Ben's most recent changes ([e78fcc6](https://gitlab.com/sourceandsummit/gabc-utils/commit/e78fcc660c20468b1c34d91edfa1274f1d6c36d9))
+
+
+
 # [1.0.0-alpha.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.0.0-alpha.0...v1.0.0-alpha.1) (2020-06-04)
 
 

@@ -5,8 +5,6 @@ var GabcSyllabified = /** @class */ (function () {
     }
     GabcSyllabified.merge = function (syllabifiedText, musicalNotation, useLargeInitial) {
         var _a = GabcSyllabified.normalizeInputs(syllabifiedText, musicalNotation), text = _a.text, notation = _a.notation;
-        if (!text)
-            return notation;
         if (!notation)
             return text;
         var _b = GabcSyllabified.splitInputs(text, notation), syllables = _b.syllables, notationNodes = _b.notationNodes;
@@ -32,18 +30,23 @@ var GabcSyllabified = /** @class */ (function () {
     GabcSyllabified.normalizeInputs = function (text, notation) {
         // normalize the text, getting rid of multiple consecutive whitespace,
         // and handling lilypond's \forceHyphen directive
-        text = text
-            .replace(/%[^\n]*(\n|$)/g, '$1')
+        // remove flex and mediant symbols if accents are marked with pipes:
+        if (/\|/.test(text)) {
+            text = text.replace(/[†*]/g, "");
+        }
+        text = text.replace(/%[^\n]*(\n|$)/g, '$1')
             .replace(/\s*\n\s*/g, '\n')
             .replace(/(\s)\s+/g, '$1')
             .replace(/\\forceHyphen\s+(\S+)\s+--\s+/g, '$1-')
+            .replace(/\|([^|]+)\|/g, '+$1+')
+            .replace(/([ -])\+|\+(\W*(?:[-\s]|$))/g, '$1$2')
             .trim();
         notation = notation.replace(/%[^\n]*(\n|$)/g, '$1').trim();
         return { text: text, notation: notation };
     };
     GabcSyllabified.splitInputs = function (text, notation) {
         var syllables = text
-            .split(/\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|([^\s-+]+-)(?=[^\s-])|(?=\s)/)
+            .split(/\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
             .filter(function (syl) { return syl && syl.trim(); });
         var notationNodes = notation.split(/\s+/);
         return { syllables: syllables, notationNodes: notationNodes };
