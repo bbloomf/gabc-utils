@@ -9,7 +9,6 @@ export class GabcSyllabified {
 
     const { text, notation } = GabcSyllabified.normalizeInputs(syllabifiedText, musicalNotation);
 
-    if (!text) return notation;
     if (!notation) return text;
 
     const { syllables, notationNodes } = GabcSyllabified.splitInputs(text, notation);
@@ -39,11 +38,17 @@ export class GabcSyllabified {
   static normalizeInputs(text: string, notation: string): { text: string, notation: string } {
     // normalize the text, getting rid of multiple consecutive whitespace,
     // and handling lilypond's \forceHyphen directive
-    text = text
-      .replace(/%[^\n]*(\n|$)/g, '$1')
+    // remove flex and mediant symbols if accents are marked with pipes:
+    if (/\|/.test(text)) {
+      text = text.replace(/[†*]/g, "");
+    }
+
+    text = text.replace(/%[^\n]*(\n|$)/g, '$1')
       .replace(/\s*\n\s*/g, '\n')
       .replace(/(\s)\s+/g, '$1')
       .replace(/\\forceHyphen\s+(\S+)\s+--\s+/g, '$1-')
+      .replace(/\|([^|]+)\|/g, '+$1+')
+      .replace(/([ -])\+|\+(\W*(?:[-\s]|$))/g, '$1$2')
       .trim()
     ;
 
@@ -56,9 +61,10 @@ export class GabcSyllabified {
 
   static splitInputs(text: string, notation: string): { syllables: string[], notationNodes: string[] } {
     const syllables = text
-      .split(/\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|([^\s-+]+-)(?=[^\s-])|(?=\s)/)
-      .filter((syl) => syl && syl.trim());
-
+      .split(/\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
+      .filter(syl => syl && syl.trim())
+    ;
+    
     const notationNodes = notation.split(/\s+/);
 
     return { syllables, notationNodes };
