@@ -137,22 +137,30 @@ var VerseText = /** @class */ (function () {
      * @param  {Object} psalmTone hash of GabcPsalmTones for flex, mediant, and termination
      * @return {string}           GABC string
      */
-    VerseText.prototype.withGabc = function (psalmTone, startVersesOnNewline) {
+    VerseText.prototype.withGabc = function (psalmTone, _a) {
         var _this = this;
-        if (startVersesOnNewline === void 0) { startVersesOnNewline = false; }
+        var _b = _a === void 0 ? {} : _a, _c = _b.startVersesOnNewLine, startVersesOnNewLine = _c === void 0 ? true : _c, _d = _b.stripFlexMediantSymbols, stripFlexMediantSymbols = _d === void 0 ? true : _d, _e = _b.addSequentialVerseNumbersStartingAt, addSequentialVerseNumbersStartingAt = _e === void 0 ? 1 : _e;
+        var nextSequentialVerseNumber = addSequentialVerseNumbersStartingAt;
+        if (nextSequentialVerseNumber <= 0)
+            nextSequentialVerseNumber = 0;
+        var getNextVerseNumberString = function () {
+            return nextSequentialVerseNumber ? nextSequentialVerseNumber++ + ". " : "";
+        };
         return ("(" + psalmTone.clef + ") " +
             this.segments
-                .map(function (seg, i) {
+                .map(function (seg, i, segments) {
                 var useFlex = seg.segmentType === exports.VerseSegmentType.Flex, segmentName = useFlex ? exports.VerseSegmentType.Mediant : seg.segmentType, tone = psalmTone[segmentName];
                 var gabc = seg.withGabc(tone, i == 0 || i == _this.segments.length - 1, // use intonation on first and last segment
-                useFlex);
+                useFlex, stripFlexMediantSymbols);
+                if (i === 0 || segments[i - 1].segmentType === exports.VerseSegmentType.Termination)
+                    gabc = getNextVerseNumberString() + gabc;
                 switch (seg.segmentType) {
                     case exports.VerseSegmentType.Flex:
                         return gabc + " (,)";
                     case exports.VerseSegmentType.Mediant:
                         return gabc + " (:)";
                     case exports.VerseSegmentType.Termination:
-                        return gabc + (" (::" + (startVersesOnNewline ? "Z" : "") + ")");
+                        return gabc + (" (::" + (startVersesOnNewLine ? "Z" : "") + ")");
                 }
             })
                 .join("\n\n"));
@@ -197,7 +205,7 @@ var VerseSegment = /** @class */ (function () {
         if (syllabifier === void 0) { syllabifier = defaultSyllabifier; }
         if (type === void 0) { type = exports.VerseSegmentType.Termination; }
         this.words = VerseSegment.splitIntoWords(text, syllabifier);
-        this.syllables = this.words.map(function (word) { return word.syllables; }).flat();
+        this.syllables = [].concat.apply([], this.words.map(function (word) { return word.syllables; }));
         this.segmentType = type;
         // mark syllable indices:
         this.syllables.forEach(function (syl, i) { return (syl.indexInSegment = i); });
@@ -219,7 +227,7 @@ var VerseSegment = /** @class */ (function () {
      */
     VerseSegment.prototype.getFormattedStrings = function (_a) {
         var _this = this;
-        var _b = _a.accents, accents = _b === void 0 ? 0 : _b, _c = _a.preparatory, preparatory = _c === void 0 ? 0 : _c, onlyMarkFirstPreparatory = _a.onlyMarkFirstPreparatory, _d = _a.syllableSeparator, syllableSeparator = _d === void 0 ? "\xAD" : _d;
+        var _b = _a === void 0 ? {} : _a, _c = _b.accents, accents = _c === void 0 ? 0 : _c, _d = _b.preparatory, preparatory = _d === void 0 ? 0 : _d, _e = _b.onlyMarkFirstPreparatory, onlyMarkFirstPreparatory = _e === void 0 ? false : _e, _f = _b.syllableSeparator, syllableSeparator = _f === void 0 ? "\xAD" : _f;
         var markedAccents = this.accentedSyllables.slice(this.accentedSyllables.length - accents);
         var firstAccentIndex = markedAccents.length
             ? markedAccents[0].indexInSegment || 0
@@ -288,10 +296,11 @@ var VerseSegment = /** @class */ (function () {
      * @param  {GabcPsalmTone} psalmTone definition for the psalm tone GABC
      * @return {string}           GABC string
      */
-    VerseSegment.prototype.withGabc = function (psalmTone, useIntonation, useFlex) {
+    VerseSegment.prototype.withGabc = function (psalmTone, useIntonation, useFlex, stripFlexMediantSymbols) {
         var _this = this;
         if (useIntonation === void 0) { useIntonation = true; }
         if (useFlex === void 0) { useFlex = false; }
+        if (stripFlexMediantSymbols === void 0) { stripFlexMediantSymbols = true; }
         var syllables = this.syllables.slice(), _a = psalmTone.gabc, intonation = _a.intonation, preparatory = _a.preparatory, accents = _a.accents, afterLastAccent = _a.afterLastAccent, tenor = _a.tenor, flex = _a.flex, result = "";
         if (useFlex) {
             afterLastAccent = [{ gabc: flex || "" }];
@@ -360,6 +369,8 @@ var VerseSegment = /** @class */ (function () {
             // only bother warning if there are actually marked accents in the text
             console.warn("Invalid state when applying psalm tone...incorrect number of syllables remaining");
         }
+        if (stripFlexMediantSymbols)
+            result = result.replace(/\s+[*†]/g, "");
         return result;
     };
     VerseSegment.prototype.toString = function () {
@@ -367,23 +378,25 @@ var VerseSegment = /** @class */ (function () {
     };
     VerseSegment.splitIntoWords = function (text, syllabifier) {
         if (syllabifier === void 0) { syllabifier = defaultSyllabifier; }
-        var wordSplit = text.trim().split(/([,;:.!?"'’”»\]\)—–-]*)(?:$|\s+|^)([\(\[«“‘'"¿¡—–-]*)/);
+        var wordSplit = text
+            .trim()
+            .split(/([,;:.!?"'’”»\]\)—–-]*)(?:$|\s+|^)(?:\[?(\d+(?:[a-l]\b)?)\.?\]?\s*)?([\(\[«“‘'"¿¡—–-]*)/);
         // the text is now split into an array composed of text that didn't match
         // the regex, followed by the first group of the regex, and the second
-        // group, and repeating.  We add an empty string to the beginning and end
-        // of this array so that the array has a number of elements that is divisible by 3
-        // and is of the form [pre,word,post,...]
-        wordSplit.unshift("");
+        // group, and repeating.  We add two empty strings to the beginning and end
+        // of this array so that the array has a number of elements that is divisible by 4
+        // and is of the form [number,pre,word,post, number,pre,word,post,...]
+        wordSplit.unshift("", "");
         wordSplit.push("");
         var words = [], lastWord, preWord;
-        for (var i = 0; i + 2 < wordSplit.length; i += 3) {
-            if (!wordSplit[i + 1]) {
-                if (!(wordSplit[i] || wordSplit[i + 2])) {
+        for (var i = 0; i + 2 < wordSplit.length; i += 4) {
+            if (!wordSplit[i + 2]) {
+                if (!(wordSplit[i + 1] || wordSplit[i + 3])) {
                     continue;
                 }
                 console.warn("no word found around " + (i + 1) + " when splitting string " + JSON.stringify(wordSplit) + " into words");
             }
-            var verseWord = new VerseWord(wordSplit[i + 1], wordSplit[i], wordSplit[i + 2], syllabifier);
+            var verseWord = new VerseWord(wordSplit[i + 2], wordSplit[i + 1], wordSplit[i + 3], syllabifier, wordSplit[i]);
             if (verseWord.isActualWord) {
                 if (preWord) {
                     verseWord.addPrePunctuation(preWord.syllables.join("").trim());
@@ -404,9 +417,11 @@ var VerseSegment = /** @class */ (function () {
     return VerseSegment;
 }());
 var VerseWord = /** @class */ (function () {
-    function VerseWord(text, pre, post, syllabifier) {
+    function VerseWord(text, pre, post, syllabifier, verseNumber) {
         var _this = this;
         if (syllabifier === void 0) { syllabifier = defaultSyllabifier; }
+        if (verseNumber)
+            this.verseNumber = verseNumber;
         this.isActualWord = /[a-z]/i.test(text);
         this.prePunctuation = this.punctuation = "";
         var syllabified = syllabifier(text);

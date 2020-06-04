@@ -23,7 +23,11 @@ export declare class VerseText {
      * @param  {Object} psalmTone hash of GabcPsalmTones for flex, mediant, and termination
      * @return {string}           GABC string
      */
-    withGabc(psalmTone: GabcPsalmTones, startVersesOnNewline?: boolean): string;
+    withGabc(psalmTone: GabcPsalmTones, { startVersesOnNewLine, stripFlexMediantSymbols, addSequentialVerseNumbersStartingAt }?: {
+        startVersesOnNewLine?: boolean;
+        stripFlexMediantSymbols?: boolean;
+        addSequentialVerseNumbersStartingAt?: number;
+    }): string;
     toString(): string;
     /**
      * Split a text into segments based on the presence of †, * and \n.
@@ -48,7 +52,7 @@ declare class VerseSegment {
      * @param  {string} syllableSeparator string used to separate syllables within the same word, defaults to \xAD
      * @return {Object[]}             Array of {text, style} objects
      */
-    getFormattedStrings({ accents, preparatory, onlyMarkFirstPreparatory, syllableSeparator }: {
+    getFormattedStrings({ accents, preparatory, onlyMarkFirstPreparatory, syllableSeparator }?: {
         accents?: number;
         preparatory?: number;
         onlyMarkFirstPreparatory?: boolean;
@@ -59,7 +63,7 @@ declare class VerseSegment {
      * @param  {GabcPsalmTone} psalmTone definition for the psalm tone GABC
      * @return {string}           GABC string
      */
-    withGabc(psalmTone: GabcPsalmTone, useIntonation?: boolean, useFlex?: boolean): string;
+    withGabc(psalmTone: GabcPsalmTone, useIntonation?: boolean, useFlex?: boolean, stripFlexMediantSymbols?: boolean): string;
     toString(): string;
     static splitIntoWords(text: string, syllabifier?: Syllabifier): any[];
 }
@@ -68,7 +72,8 @@ declare class VerseWord {
     prePunctuation: string;
     punctuation: string;
     syllables: VerseSyllable[];
-    constructor(text: string, pre: string, post: string, syllabifier?: Syllabifier);
+    verseNumber?: string;
+    constructor(text: string, pre: string, post: string, syllabifier?: Syllabifier, verseNumber?: string);
     /**
      * adds punctuation that comes after the word, but is separated by a space
      * @param {string} punctuation punctuation to add following the word
