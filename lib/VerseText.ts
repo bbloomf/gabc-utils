@@ -36,26 +36,44 @@ export class VerseText {
    * @param  {Object} psalmTone hash of GabcPsalmTones for flex, mediant, and termination
    * @return {string}           GABC string
    */
-  withGabc(psalmTone: GabcPsalmTones, startVersesOnNewline = false) {
+  withGabc(
+    psalmTone: GabcPsalmTones,
+    {
+      startVersesOnNewLine = true,
+      stripFlexMediantSymbols = true,
+      addSequentialVerseNumbersStartingAt = 1
+    }: {
+      startVersesOnNewLine?: boolean;
+      stripFlexMediantSymbols?: boolean;
+      addSequentialVerseNumbersStartingAt?: number;
+    } = {}
+  ) {
+    let nextSequentialVerseNumber = addSequentialVerseNumbersStartingAt;
+    if (nextSequentialVerseNumber <= 0) nextSequentialVerseNumber = 0;
+    const getNextVerseNumberString = () =>
+      nextSequentialVerseNumber ? `${nextSequentialVerseNumber++}. ` : "";
     return (
       `(${psalmTone.clef}) ` +
       this.segments
-        .map((seg, i) => {
+        .map((seg, i, segments) => {
           let useFlex = seg.segmentType === VerseSegmentType.Flex,
             segmentName = useFlex ? VerseSegmentType.Mediant : seg.segmentType,
             tone = psalmTone[segmentName];
           let gabc = seg.withGabc(
             tone as GabcPsalmTone,
             i == 0 || i == this.segments.length - 1, // use intonation on first and last segment
-            useFlex
+            useFlex,
+            stripFlexMediantSymbols
           );
+          if (i === 0 || segments[i - 1].segmentType === VerseSegmentType.Termination)
+            gabc = getNextVerseNumberString() + gabc;
           switch (seg.segmentType) {
             case VerseSegmentType.Flex:
               return gabc + " (,)";
             case VerseSegmentType.Mediant:
               return gabc + " (:)";
             case VerseSegmentType.Termination:
-              return gabc + ` (::${startVersesOnNewline ? "Z" : ""})`;
+              return gabc + ` (::${startVersesOnNewLine ? "Z" : ""})`;
           }
         })
         .join("\n\n")
@@ -118,7 +136,7 @@ class VerseSegment {
     additionalWhitespace?: string
   ) {
     this.words = VerseSegment.splitIntoWords(text, syllabifier);
-    this.syllables = this.words.map(word => word.syllables).flat();
+    this.syllables = [].concat(...this.words.map(word => word.syllables));
     this.segmentType = type;
 
     // mark syllable indices:
@@ -145,14 +163,14 @@ class VerseSegment {
   getFormattedStrings({
     accents = 0,
     preparatory = 0,
-    onlyMarkFirstPreparatory,
+    onlyMarkFirstPreparatory = false,
     syllableSeparator = "\xAD"
   }: {
     accents?: number;
     preparatory?: number;
     onlyMarkFirstPreparatory?: boolean;
     syllableSeparator?: string;
-  }): FormattedString[] {
+  } = {}): FormattedString[] {
     let markedAccents = this.accentedSyllables.slice(this.accentedSyllables.length - accents);
     let firstAccentIndex = markedAccents.length
       ? markedAccents[0].indexInSegment || 0
@@ -225,7 +243,12 @@ class VerseSegment {
    * @param  {GabcPsalmTone} psalmTone definition for the psalm tone GABC
    * @return {string}           GABC string
    */
-  withGabc(psalmTone: GabcPsalmTone, useIntonation = true, useFlex = false) {
+  withGabc(
+    psalmTone: GabcPsalmTone,
+    useIntonation = true,
+    useFlex = false,
+    stripFlexMediantSymbols = true
+  ) {
     let syllables = this.syllables.slice(),
       { intonation, preparatory, accents, afterLastAccent, tenor, flex } = psalmTone.gabc,
       result = "";
@@ -303,6 +326,7 @@ class VerseSegment {
         "Invalid state when applying psalm tone...incorrect number of syllables remaining"
       );
     }
+    if (stripFlexMediantSymbols) result = result.replace(/\s+[*†]/g, "");
     return result;
   }
 
@@ -311,20 +335,22 @@ class VerseSegment {
   }
 
   static splitIntoWords(text: string, syllabifier = defaultSyllabifier) {
-    let wordSplit = text.trim().split(/([,;:.!?"'’”»\]\)—–-]*)(?:$|\s+|^)([\(\[«“‘'"¿¡—–-]*)/);
+    let wordSplit = text
+      .trim()
+      .split(/([,;:.!?"'’”»\]\)—–-]*)(?:$|\s+|^)(?:\[?(\d+(?:[a-l]\b)?)\.?\]?\s*)?([\(\[«“‘'"¿¡—–-]*)/);
     // the text is now split into an array composed of text that didn't match
     // the regex, followed by the first group of the regex, and the second
-    // group, and repeating.  We add an empty string to the beginning and end
-    // of this array so that the array has a number of elements that is divisible by 3
-    // and is of the form [pre,word,post,...]
-    wordSplit.unshift("");
+    // group, and repeating.  We add two empty strings to the beginning and end
+    // of this array so that the array has a number of elements that is divisible by 4
+    // and is of the form [number,pre,word,post, number,pre,word,post,...]
+    wordSplit.unshift("", "");
     wordSplit.push("");
     let words = [],
       lastWord,
       preWord;
-    for (let i = 0; i + 2 < wordSplit.length; i += 3) {
-      if (!wordSplit[i + 1]) {
-        if (!(wordSplit[i] || wordSplit[i + 2])) {
+    for (let i = 0; i + 2 < wordSplit.length; i += 4) {
+      if (!wordSplit[i + 2]) {
+        if (!(wordSplit[i + 1] || wordSplit[i + 3])) {
           continue;
         }
         console.warn(
@@ -333,7 +359,13 @@ class VerseSegment {
           )} into words`
         );
       }
-      let verseWord = new VerseWord(wordSplit[i + 1], wordSplit[i], wordSplit[i + 2], syllabifier);
+      let verseWord = new VerseWord(
+        wordSplit[i + 2],
+        wordSplit[i + 1],
+        wordSplit[i + 3],
+        syllabifier,
+        wordSplit[i]
+      );
       if (verseWord.isActualWord) {
         if (preWord) {
           verseWord.addPrePunctuation(preWord.syllables.join("").trim());
@@ -356,8 +388,16 @@ class VerseWord {
   prePunctuation: string;
   punctuation: string;
   syllables: VerseSyllable[];
+  verseNumber?: string;
 
-  constructor(text: string, pre: string, post: string, syllabifier = defaultSyllabifier) {
+  constructor(
+    text: string,
+    pre: string,
+    post: string,
+    syllabifier = defaultSyllabifier,
+    verseNumber?: string
+  ) {
+    if (verseNumber) this.verseNumber = verseNumber;
     this.isActualWord = /[a-z]/i.test(text);
     this.prePunctuation = this.punctuation = "";
     let syllabified = syllabifier(text);
