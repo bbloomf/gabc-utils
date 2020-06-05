@@ -1,4 +1,5 @@
 import { VerseSegmentType } from "./VerseText";
+import { shiftGabc } from "./shiftGabc";
 
 export type GabcPsalmTones = {
   [VerseSegmentType.Flex]?: GabcPsalmTone;
@@ -44,13 +45,29 @@ export class GabcPsalmTone {
   static getFromGabc(
     gabc: string,
     options: GabcPsalmToneOptions = {},
-    clef = "c4"
+    clef?: string
   ): GabcPsalmTones {
     gabc = gabc.replace(/[/()]+/g, " ");
     let clefMatch = /^[^a-m]*((?:cb?|f)[1-4])/.exec(gabc);
     if (clefMatch) {
-      clef = clefMatch[1];
+      const detectedClef = clefMatch[1],
+        desiredClef = clef;
+      if (clef && clef.slice(0, -1) === detectedClef.slice(0, -1)) {
+        const detectedClefPosition = parseInt(detectedClef.slice(-1)),
+          desiredClefPosition = parseInt(clef.slice(-1)),
+          shift = 2 * (desiredClefPosition - detectedClefPosition);
+        // shift the psalm tone
+        try {
+          gabc = shiftGabc(gabc, shift);
+        } catch(exception) {
+          clef = detectedClef;
+        }
+      } else {
+        clef = detectedClef;
+      }
       gabc = gabc.slice(clefMatch.index + clefMatch[0].length);
+    } else if (!clef) {
+      clef = "c4";
     }
     let gabcSegments = gabc.split(" : ");
     if (gabcSegments.length != 2) {
@@ -63,7 +80,13 @@ export class GabcPsalmTone {
         if (match) {
           // jr h i g => jr h i 'g gr g
           gabc =
-            gabc.slice(0, -match[0].length) + " '" + match[1] + " " + match[2].toLowerCase() + "r " + match[2].toLowerCase();
+            gabc.slice(0, -match[0].length) +
+            " '" +
+            match[1] +
+            " " +
+            match[2].toLowerCase() +
+            "r " +
+            match[2].toLowerCase();
         }
       }
       return new GabcPsalmTone(gabc, "", true, clef);
