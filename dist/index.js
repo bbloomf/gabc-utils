@@ -484,6 +484,22 @@ var VerseSyllable = /** @class */ (function () {
     return VerseSyllable;
 }());
 
+/**
+ * shift all notes in GABC by shift (upward if positive, downward if negative)
+ * @param gabc string of GABC (without parentheses)
+ * @param shift amount to shift
+ */
+function shiftGabc(gabc, shift) {
+    return gabc.replace(/([cf]b?[1-4])|([a-m])/gi, function (match, clef, c) {
+        if (clef)
+            return clef;
+        var newC = String.fromCharCode(c.charCodeAt(0) + shift);
+        if (!/[a-m]/i.test(newC))
+            throw "cannot be shifted that much";
+        return newC;
+    });
+}
+
 var GabcPsalmTone = /** @class */ (function () {
     function GabcPsalmTone(gabc, prefix, flexEqualsTenor, clef) {
         if (prefix === void 0) { prefix = ""; }
@@ -608,12 +624,27 @@ var GabcPsalmTone = /** @class */ (function () {
     GabcPsalmTone.getFromGabc = function (gabc, options, clef) {
         var _a;
         if (options === void 0) { options = {}; }
-        if (clef === void 0) { clef = "c4"; }
         gabc = gabc.replace(/[/()]+/g, " ");
         var clefMatch = /^[^a-m]*((?:cb?|f)[1-4])/.exec(gabc);
         if (clefMatch) {
-            clef = clefMatch[1];
+            var detectedClef = clefMatch[1];
+            if (clef && clef.slice(0, -1) === detectedClef.slice(0, -1)) {
+                var detectedClefPosition = parseInt(detectedClef.slice(-1)), desiredClefPosition = parseInt(clef.slice(-1)), shift = 2 * (desiredClefPosition - detectedClefPosition);
+                // shift the psalm tone
+                try {
+                    gabc = shiftGabc(gabc, shift);
+                }
+                catch (exception) {
+                    clef = detectedClef;
+                }
+            }
+            else {
+                clef = detectedClef;
+            }
             gabc = gabc.slice(clefMatch.index + clefMatch[0].length);
+        }
+        else if (!clef) {
+            clef = "c4";
         }
         var gabcSegments = gabc.split(" : ");
         if (gabcSegments.length != 2) {
@@ -626,7 +657,13 @@ var GabcPsalmTone = /** @class */ (function () {
                 if (match) {
                     // jr h i g => jr h i 'g gr g
                     gabc =
-                        gabc.slice(0, -match[0].length) + " '" + match[1] + " " + match[2].toLowerCase() + "r " + match[2].toLowerCase();
+                        gabc.slice(0, -match[0].length) +
+                            " '" +
+                            match[1] +
+                            " " +
+                            match[2].toLowerCase() +
+                            "r " +
+                            match[2].toLowerCase();
                 }
             }
             return new GabcPsalmTone(gabc, "", true, clef);

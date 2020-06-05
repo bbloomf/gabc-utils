@@ -1,3 +1,12 @@
+# [1.0.0-alpha.4](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.0.0-alpha.3...v1.0.0-alpha.4) (2020-06-05)
+
+
+### Features
+
+* **GabcPsalmTone:** Shift psalmtone melody when passing in a different clef ([7178114](https://gitlab.com/sourceandsummit/gabc-utils/commit/7178114e332f1f948cb301b21f4fe41b8ea914cb))
+
+
+
 # [1.0.0-alpha.3](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.0.0-alpha.2...v1.0.0-alpha.3) (2020-06-04)
 
 
