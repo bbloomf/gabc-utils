@@ -1,3 +1,12 @@
+# [1.0.0-alpha.6](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.0.0-alpha.5...v1.0.0-alpha.6) (2020-06-06)
+
+
+### Bug Fixes
+
+* **GabcPsalmTone:** Preserve extra space after reciting tone ([667f535](https://gitlab.com/sourceandsummit/gabc-utils/commit/667f53562ce36a084cd64137fc0bdfa8e26c3741))
+
+
+
 # [1.0.0-alpha.5](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.0.0-alpha.4...v1.0.0-alpha.5) (2020-06-06)
 
 
