@@ -48,7 +48,7 @@ export class GabcPsalmTone {
     options: GabcPsalmToneOptions = {},
     clef?: string
   ): GabcPsalmTones {
-    gabc = gabc.replace(/[/()]+/g, " ");
+    gabc = gabc.replace(/[()]+/g, " ");
     let originalGabc = gabc;
     let clefMatch = /^[^a-m]*((?:cb?|f)[1-4])/.exec(gabc);
     if (clefMatch) {
@@ -61,7 +61,7 @@ export class GabcPsalmTone {
         // shift the psalm tone
         try {
           gabc = shiftGabc(gabc, shift);
-        } catch(exception) {
+        } catch (exception) {
           clef = detectedClef;
         }
       } else {
@@ -72,6 +72,7 @@ export class GabcPsalmTone {
       clef = "c4";
     }
     originalGabc = clef + " " + gabc.trim();
+    gabc = gabc.replace(/\/+/g, " ");
     let gabcSegments = gabc.split(" : ");
     if (gabcSegments.length != 2) {
       console.warn("GabcPsalmTone.getFromGabc called on invalid GABC:", gabc);
