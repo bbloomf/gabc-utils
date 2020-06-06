@@ -5,6 +5,7 @@ export type GabcPsalmTones = {
   [VerseSegmentType.Flex]?: GabcPsalmTone;
   [VerseSegmentType.Mediant]: GabcPsalmTone;
   [VerseSegmentType.Termination]: GabcPsalmTone;
+  originalGabc: string;
   clef: string;
 };
 export type GabcPsalmToneOptions = {
@@ -48,6 +49,7 @@ export class GabcPsalmTone {
     clef?: string
   ): GabcPsalmTones {
     gabc = gabc.replace(/[/()]+/g, " ");
+    let originalGabc = gabc;
     let clefMatch = /^[^a-m]*((?:cb?|f)[1-4])/.exec(gabc);
     if (clefMatch) {
       const detectedClef = clefMatch[1],
@@ -69,6 +71,7 @@ export class GabcPsalmTone {
     } else if (!clef) {
       clef = "c4";
     }
+    originalGabc = clef + " " + gabc.trim();
     let gabcSegments = gabc.split(" : ");
     if (gabcSegments.length != 2) {
       console.warn("GabcPsalmTone.getFromGabc called on invalid GABC:", gabc);
@@ -94,6 +97,7 @@ export class GabcPsalmTone {
     return {
       [VerseSegmentType.Mediant]: gabcPsalmTones[0],
       [VerseSegmentType.Termination]: gabcPsalmTones[1],
+      originalGabc,
       clef
     };
   }
