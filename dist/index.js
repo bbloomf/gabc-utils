@@ -625,6 +625,7 @@ var GabcPsalmTone = /** @class */ (function () {
         var _a;
         if (options === void 0) { options = {}; }
         gabc = gabc.replace(/[/()]+/g, " ");
+        var originalGabc = gabc;
         var clefMatch = /^[^a-m]*((?:cb?|f)[1-4])/.exec(gabc);
         if (clefMatch) {
             var detectedClef = clefMatch[1];
@@ -646,6 +647,7 @@ var GabcPsalmTone = /** @class */ (function () {
         else if (!clef) {
             clef = "c4";
         }
+        originalGabc = clef + " " + gabc.trim();
         var gabcSegments = gabc.split(" : ");
         if (gabcSegments.length != 2) {
             console.warn("GabcPsalmTone.getFromGabc called on invalid GABC:", gabc);
@@ -671,6 +673,7 @@ var GabcPsalmTone = /** @class */ (function () {
         return _a = {},
             _a[exports.VerseSegmentType.Mediant] = gabcPsalmTones[0],
             _a[exports.VerseSegmentType.Termination] = gabcPsalmTones[1],
+            _a.originalGabc = originalGabc,
             _a.clef = clef,
             _a;
     };

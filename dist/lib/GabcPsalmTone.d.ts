@@ -3,6 +3,7 @@ export declare type GabcPsalmTones = {
     [VerseSegmentType.Flex]?: GabcPsalmTone;
     [VerseSegmentType.Mediant]: GabcPsalmTone;
     [VerseSegmentType.Termination]: GabcPsalmTone;
+    originalGabc: string;
     clef: string;
 };
 export declare type GabcPsalmToneOptions = {

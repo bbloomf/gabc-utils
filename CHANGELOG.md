@@ -1,3 +1,12 @@
+# [1.0.0-alpha.5](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.0.0-alpha.4...v1.0.0-alpha.5) (2020-06-06)
+
+
+### Features
+
+* **GabcPsalmTone:** Include "originalGabc" on the GabcPsalmTones object ([bb3f466](https://gitlab.com/sourceandsummit/gabc-utils/commit/bb3f46640df872d610b9ad22efaa29ab010757a3))
+
+
+
 # [1.0.0-alpha.4](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.0.0-alpha.3...v1.0.0-alpha.4) (2020-06-05)
 
 
