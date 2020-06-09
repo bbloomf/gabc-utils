@@ -61,7 +61,7 @@ export class GabcSyllabified {
 
   static splitInputs(text: string, notation: string): { syllables: string[], notationNodes: string[] } {
     const syllables = text
-      .split(/\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
+    .split(/\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*\([^)]+\))|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
       .filter(syl => syl && syl.trim())
     ;
     
@@ -76,6 +76,15 @@ export class GabcSyllabified {
         s.replace(GabcSyllabified.regexFindParens, '$1')
     ;
   }
+  // check whether a syllable text represents a syllable or not,
+  //   It is considered non-syllabif if
+  //     * it starts with !
+  //     * it contains no letters
+  //     * it is surrounded by parentheses
+  static isNonSyllableString (s: string) {
+    return /^(\s*!|(\s*[^\sa-záéíóúýàèìòùäëïöüÿæœǽœ́][^a-záéíóúýàèìòùäëïöüÿæœǽœ́]*)$|(\s*\(.*\))$|(\s*"\(.*\)"$))/i.test(s);
+  }
+
 
   /*-----  GETTER FUNCTIONS  -----*/
   static getSyllable(syllables: string[], index: number) {
@@ -85,9 +94,10 @@ export class GabcSyllabified {
   static getNonSyllable(syllables: string[], syllableNdx: number, notation: string): string {
     let syllable = syllables[syllableNdx];
 
-    if (/^(\s*!|[^a-záéíóúýàèìòùäëïöüÿæœǽœ́]+$|\s*\(.*\)$|\s*"\(.*\)"$)/i.test(syllable)
-        && !GabcSyllabified.regexClef.test(notation)) {
-
+    if(
+      GabcSyllabified.isNonSyllableString(syllable) &&
+      !GabcSyllabified.regexClef.test(notation)
+    ) {
       return syllable.replace(/^(\s*)!/, '$1')
           .replace(/^(\s*)"?\((.*?)\)"?$/, '$1$2')
       ;
@@ -107,11 +117,13 @@ export class GabcSyllabified {
     notation = GabcSyllabified.stripParens(notation);
 
     let syllable = noSyllable ? GabcSyllabified.getNonSyllable(syllables, sylNdx, notation) : GabcSyllabified.getSyllable(syllables, sylNdx++);
-    if (!noSyllable) {
+    if (noSyllable) {
+      if(/\S/.test(syllable)) sylNdx++;
+    } else {
       let nextSyllable = syllable;
       syllable = GabcSyllabified.stripParens(syllable);
 
-      while (/^\s*\(.*\)$/.test(nextSyllable)) {
+      while (GabcSyllabified.isNonSyllableString(nextSyllable)) {
         if (/^".*"$/.test(syllable)) {
           syllable = syllable.slice(1, -1);
         }
