@@ -43,11 +43,13 @@ export class VerseText {
       stripFlexMediantSymbols = true,
       addSequentialVerseNumbersStartingAt = 1,
       addInitialVerseNumber,
+      useLargeInitial = true
     }: {
       startVersesOnNewLine?: boolean;
       stripFlexMediantSymbols?: boolean;
       addSequentialVerseNumbersStartingAt?: number;
       addInitialVerseNumber?: number;
+      useLargeInitial?: boolean;
     } = {}
   ) {
     let nextSequentialVerseNumber = addSequentialVerseNumbersStartingAt;
@@ -68,6 +70,7 @@ export class VerseText {
         ? `${nextSequentialVerseNumber++}. `
         : "";
     };
+    useLargeInitial = useLargeInitial && !addSequentialVerseNumbersStartingAt && !addInitialVerseNumber;
     return (
       `(${psalmTone.clef}) ` +
       this.segments
@@ -79,7 +82,8 @@ export class VerseText {
             tone as GabcPsalmTone,
             i == 0 || i == this.segments.length - 1, // use intonation on first and last segment
             useFlex,
-            stripFlexMediantSymbols
+            stripFlexMediantSymbols,
+            i === 0 && useLargeInitial
           );
           if (
             i === 0 ||
@@ -281,7 +285,8 @@ class VerseSegment {
     psalmTone: GabcPsalmTone,
     useIntonation = true,
     useFlex = false,
-    stripFlexMediantSymbols = true
+    stripFlexMediantSymbols = true,
+    useLargeInitial = false
   ) {
     let syllables = this.syllables.slice(),
       {
@@ -293,6 +298,23 @@ class VerseSegment {
         flex,
       } = psalmTone.gabc,
       result = "";
+    if (useLargeInitial && !syllables[0].preText) {
+      syllables = syllables.slice();
+      let firstSyllable = syllables[0];
+      firstSyllable = syllables[0] = new VerseSyllable(
+        firstSyllable.text,
+        firstSyllable.firstOfWord,
+        firstSyllable.lastOfWord,
+        firstSyllable.preText,
+        firstSyllable.postText,
+        firstSyllable.word
+      );
+      if(firstSyllable.lastOfWord && firstSyllable.text.length === 3) {
+        firstSyllable.text = firstSyllable.text.toUpperCase();
+      } else {
+        firstSyllable.text = firstSyllable.text.slice(0, 2).toUpperCase() + firstSyllable.text.slice(2).toLowerCase();
+      }
+    }
     if (useFlex) {
       afterLastAccent = [{ gabc: flex || "" }];
       accents = [
