@@ -46,7 +46,7 @@ var GabcSyllabified = /** @class */ (function () {
     };
     GabcSyllabified.splitInputs = function (text, notation) {
         var syllables = text
-            .split(/\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
+            .split(/\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*\([^)]+\))|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
             .filter(function (syl) { return syl && syl.trim(); });
         var notationNodes = notation.split(/\s+/);
         return { syllables: syllables, notationNodes: notationNodes };
@@ -55,14 +55,22 @@ var GabcSyllabified = /** @class */ (function () {
     GabcSyllabified.stripParens = function (s) {
         return s.replace(GabcSyllabified.regexFindParensWithLeadSpaces, '$1$2');
     };
+    // check whether a syllable text represents a syllable or not,
+    //   It is considered non-syllabif if
+    //     * it starts with !
+    //     * it contains no letters
+    //     * it is surrounded by parentheses
+    GabcSyllabified.isNonSyllableString = function (s) {
+        return /^(\s*!|(\s*[^\sa-záéíóúýàèìòùäëïöüÿæœǽœ́][^a-záéíóúýàèìòùäëïöüÿæœǽœ́]*)$|(\s*\(.*\))$|(\s*"\(.*\)"$))/i.test(s);
+    };
     /*-----  GETTER FUNCTIONS  -----*/
     GabcSyllabified.getSyllable = function (syllables, index) {
         return (syllables[index] || ' ').replace(/^(\s*)"(.*)"$/, '$1$2');
     };
     GabcSyllabified.getNonSyllable = function (syllables, syllableNdx, notation) {
         var syllable = syllables[syllableNdx];
-        if (/^(\s*!|[^a-záéíóúýàèìòùäëïöüÿæœǽœ́]+$|\s*\(.*\)$|\s*"\(.*\)"$)/i.test(syllable)
-            && !GabcSyllabified.regexClef.test(notation)) {
+        if (GabcSyllabified.isNonSyllableString(syllable) &&
+            !GabcSyllabified.regexClef.test(notation)) {
             return syllable.replace(/^(\s*)!/, '$1')
                 .replace(/^(\s*)"?\((.*?)\)"?$/, '$1$2');
         }
@@ -73,10 +81,14 @@ var GabcSyllabified = /** @class */ (function () {
         var noSyllable = GabcSyllabified.regexNonSyllabicGabc.test(notation) || /^\(.*\)$/.test(notation);
         notation = GabcSyllabified.stripParens(notation);
         var syllable = noSyllable ? GabcSyllabified.getNonSyllable(syllables, sylNdx, notation) : GabcSyllabified.getSyllable(syllables, sylNdx++);
-        if (!noSyllable) {
+        if (noSyllable) {
+            if (/\S/.test(syllable))
+                sylNdx++;
+        }
+        else {
             var nextSyllable = syllable;
             syllable = GabcSyllabified.stripParens(syllable);
-            while (/^\s*\(.*\)$/.test(nextSyllable)) {
+            while (GabcSyllabified.isNonSyllableString(nextSyllable)) {
                 if (/^".*"$/.test(syllable)) {
                     syllable = syllable.slice(1, -1);
                 }

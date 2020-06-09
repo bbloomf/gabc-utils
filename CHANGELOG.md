@@ -1,3 +1,12 @@
+# [1.0.0-alpha.7](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.0.0-alpha.6...v1.0.0-alpha.7) (2020-06-09)
+
+
+### Bug Fixes
+
+* Never double a text ([7ae71e3](https://gitlab.com/sourceandsummit/gabc-utils/commit/7ae71e3d193bed6892630fb19716abe8bb21a909))
+
+
+
 # [1.0.0-alpha.6](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.0.0-alpha.5...v1.0.0-alpha.6) (2020-06-06)
 
 

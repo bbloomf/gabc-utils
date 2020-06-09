@@ -13,6 +13,7 @@ export declare class GabcSyllabified {
         notationNodes: string[];
     };
     static stripParens(s: string): string;
+    static isNonSyllableString(s: string): boolean;
     static getSyllable(syllables: string[], index: number): string;
     static getNonSyllable(syllables: string[], syllableNdx: number, notation: string): string;
     static mapSyllable(notation: string, syllables: string[], sylNdx: number, isFirstSyllable: boolean): {
