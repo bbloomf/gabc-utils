@@ -43,13 +43,19 @@ export class VerseText {
       stripFlexMediantSymbols = true,
       addSequentialVerseNumbersStartingAt = 1,
       addInitialVerseNumber,
-      useLargeInitial = true
+      useLargeInitial = true,
+      barDictionary = {
+        [VerseSegmentType.Flex]: ",",
+        [VerseSegmentType.Mediant]: ";",
+        [VerseSegmentType.Termination]: ":",
+      }
     }: {
       startVersesOnNewLine?: boolean;
       stripFlexMediantSymbols?: boolean;
       addSequentialVerseNumbersStartingAt?: number;
       addInitialVerseNumber?: number;
       useLargeInitial?: boolean;
+      barDictionary?: { [k in VerseSegmentType]: string}
     } = {}
   ) {
     let nextSequentialVerseNumber = addSequentialVerseNumbersStartingAt;
@@ -92,14 +98,11 @@ export class VerseText {
             segments[i - 1].segmentType === VerseSegmentType.Termination
           )
             gabc = getNextVerseNumberString() + gabc;
-          switch (seg.segmentType) {
-            case VerseSegmentType.Flex:
-              return gabc + " (,)";
-            case VerseSegmentType.Mediant:
-              return gabc + " (:)";
-            case VerseSegmentType.Termination:
-              return gabc + ` (::${startVersesOnNewLine ? "Z" : ""})`;
+          let bar = barDictionary[seg.segmentType];
+          if (startVersesOnNewLine && seg.segmentType === VerseSegmentType.Termination) {
+            bar += "Z";
           }
+          return gabc + ` (${bar})`;
         })
         .join("\n\n")
     );
