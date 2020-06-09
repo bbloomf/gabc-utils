@@ -51,11 +51,13 @@ export class VerseText {
     } = {}
   ) {
     let nextSequentialVerseNumber = addSequentialVerseNumbersStartingAt;
-    if (nextSequentialVerseNumber <= 0) nextSequentialVerseNumber = 0;
-    if (addInitialVerseNumber > 0) {
+    if (addInitialVerseNumber !== undefined) {
       nextSequentialVerseNumber = addInitialVerseNumber;
     } else {
       addInitialVerseNumber = 0;
+    }
+    if (nextSequentialVerseNumber <= 0) {
+      nextSequentialVerseNumber = 0;
     }
     const getNextVerseNumberString = () => {
       if(addInitialVerseNumber) {
