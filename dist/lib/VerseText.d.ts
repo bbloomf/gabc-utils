@@ -23,11 +23,12 @@ export declare class VerseText {
      * @param  {Object} psalmTone hash of GabcPsalmTones for flex, mediant, and termination
      * @return {string}           GABC string
      */
-    withGabc(psalmTone: GabcPsalmTones, { startVersesOnNewLine, stripFlexMediantSymbols, addSequentialVerseNumbersStartingAt, addInitialVerseNumber, }?: {
+    withGabc(psalmTone: GabcPsalmTones, { startVersesOnNewLine, stripFlexMediantSymbols, addSequentialVerseNumbersStartingAt, addInitialVerseNumber, useLargeInitial }?: {
         startVersesOnNewLine?: boolean;
         stripFlexMediantSymbols?: boolean;
         addSequentialVerseNumbersStartingAt?: number;
         addInitialVerseNumber?: number;
+        useLargeInitial?: boolean;
     }): string;
     toString(): string;
     /**
@@ -64,7 +65,7 @@ declare class VerseSegment {
      * @param  {GabcPsalmTone} psalmTone definition for the psalm tone GABC
      * @return {string}           GABC string
      */
-    withGabc(psalmTone: GabcPsalmTone, useIntonation?: boolean, useFlex?: boolean, stripFlexMediantSymbols?: boolean): string;
+    withGabc(psalmTone: GabcPsalmTone, useIntonation?: boolean, useFlex?: boolean, stripFlexMediantSymbols?: boolean, useLargeInitial?: boolean): string;
     toString(): string;
     static splitIntoWords(text: string, syllabifier?: Syllabifier): any[];
 }

@@ -154,7 +154,7 @@ var VerseText = /** @class */ (function () {
      */
     VerseText.prototype.withGabc = function (psalmTone, _a) {
         var _this = this;
-        var _b = _a === void 0 ? {} : _a, _c = _b.startVersesOnNewLine, startVersesOnNewLine = _c === void 0 ? true : _c, _d = _b.stripFlexMediantSymbols, stripFlexMediantSymbols = _d === void 0 ? true : _d, _e = _b.addSequentialVerseNumbersStartingAt, addSequentialVerseNumbersStartingAt = _e === void 0 ? 1 : _e, addInitialVerseNumber = _b.addInitialVerseNumber;
+        var _b = _a === void 0 ? {} : _a, _c = _b.startVersesOnNewLine, startVersesOnNewLine = _c === void 0 ? true : _c, _d = _b.stripFlexMediantSymbols, stripFlexMediantSymbols = _d === void 0 ? true : _d, _e = _b.addSequentialVerseNumbersStartingAt, addSequentialVerseNumbersStartingAt = _e === void 0 ? 1 : _e, addInitialVerseNumber = _b.addInitialVerseNumber, _f = _b.useLargeInitial, useLargeInitial = _f === void 0 ? true : _f;
         var nextSequentialVerseNumber = addSequentialVerseNumbersStartingAt;
         if (nextSequentialVerseNumber <= 0)
             nextSequentialVerseNumber = 0;
@@ -175,12 +175,13 @@ var VerseText = /** @class */ (function () {
                 ? nextSequentialVerseNumber++ + ". "
                 : "";
         };
+        useLargeInitial = useLargeInitial && !addSequentialVerseNumbersStartingAt && !addInitialVerseNumber;
         return ("(" + psalmTone.clef + ") " +
             this.segments
                 .map(function (seg, i, segments) {
                 var useFlex = seg.segmentType === exports.VerseSegmentType.Flex, segmentName = useFlex ? exports.VerseSegmentType.Mediant : seg.segmentType, tone = psalmTone[segmentName];
                 var gabc = seg.withGabc(tone, i == 0 || i == _this.segments.length - 1, // use intonation on first and last segment
-                useFlex, stripFlexMediantSymbols);
+                useFlex, stripFlexMediantSymbols, i === 0 && useLargeInitial);
                 if (i === 0 ||
                     segments[i - 1].segmentType === exports.VerseSegmentType.Termination)
                     gabc = getNextVerseNumberString() + gabc;
@@ -330,12 +331,24 @@ var VerseSegment = /** @class */ (function () {
      * @param  {GabcPsalmTone} psalmTone definition for the psalm tone GABC
      * @return {string}           GABC string
      */
-    VerseSegment.prototype.withGabc = function (psalmTone, useIntonation, useFlex, stripFlexMediantSymbols) {
+    VerseSegment.prototype.withGabc = function (psalmTone, useIntonation, useFlex, stripFlexMediantSymbols, useLargeInitial) {
         var _this = this;
         if (useIntonation === void 0) { useIntonation = true; }
         if (useFlex === void 0) { useFlex = false; }
         if (stripFlexMediantSymbols === void 0) { stripFlexMediantSymbols = true; }
+        if (useLargeInitial === void 0) { useLargeInitial = false; }
         var syllables = this.syllables.slice(), _a = psalmTone.gabc, intonation = _a.intonation, preparatory = _a.preparatory, accents = _a.accents, afterLastAccent = _a.afterLastAccent, tenor = _a.tenor, flex = _a.flex, result = "";
+        if (useLargeInitial && !syllables[0].preText) {
+            syllables = syllables.slice();
+            var firstSyllable = syllables[0];
+            firstSyllable = syllables[0] = new VerseSyllable(firstSyllable.text, firstSyllable.firstOfWord, firstSyllable.lastOfWord, firstSyllable.preText, firstSyllable.postText, firstSyllable.word);
+            if (firstSyllable.lastOfWord && firstSyllable.text.length === 3) {
+                firstSyllable.text = firstSyllable.text.toUpperCase();
+            }
+            else {
+                firstSyllable.text = firstSyllable.text.slice(0, 2).toUpperCase() + firstSyllable.text.slice(2).toLowerCase();
+            }
+        }
         if (useFlex) {
             afterLastAccent = [{ gabc: flex || "" }];
             accents = [

@@ -1,3 +1,12 @@
+# [1.0.0-alpha.8](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.0.0-alpha.7...v1.0.0-alpha.8) (2020-06-09)
+
+
+### Features
+
+* Add parameter to use capitalization rules for drop cap on psalm toned antiphons ([3d9f7d6](https://gitlab.com/sourceandsummit/gabc-utils/commit/3d9f7d67f03209e3780777ecdf1927feef5f59f3))
+
+
+
 # [1.0.0-alpha.7](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.0.0-alpha.6...v1.0.0-alpha.7) (2020-06-09)
 
 
