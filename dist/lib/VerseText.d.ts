@@ -23,12 +23,15 @@ export declare class VerseText {
      * @param  {Object} psalmTone hash of GabcPsalmTones for flex, mediant, and termination
      * @return {string}           GABC string
      */
-    withGabc(psalmTone: GabcPsalmTones, { startVersesOnNewLine, stripFlexMediantSymbols, addSequentialVerseNumbersStartingAt, addInitialVerseNumber, useLargeInitial }?: {
+    withGabc(psalmTone: GabcPsalmTones, { startVersesOnNewLine, stripFlexMediantSymbols, addSequentialVerseNumbersStartingAt, addInitialVerseNumber, useLargeInitial, barDictionary }?: {
         startVersesOnNewLine?: boolean;
         stripFlexMediantSymbols?: boolean;
         addSequentialVerseNumbersStartingAt?: number;
         addInitialVerseNumber?: number;
         useLargeInitial?: boolean;
+        barDictionary?: {
+            [k in VerseSegmentType]: string;
+        };
     }): string;
     toString(): string;
     /**

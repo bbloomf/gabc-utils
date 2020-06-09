@@ -153,8 +153,13 @@ var VerseText = /** @class */ (function () {
      * @return {string}           GABC string
      */
     VerseText.prototype.withGabc = function (psalmTone, _a) {
+        var _b;
         var _this = this;
-        var _b = _a === void 0 ? {} : _a, _c = _b.startVersesOnNewLine, startVersesOnNewLine = _c === void 0 ? true : _c, _d = _b.stripFlexMediantSymbols, stripFlexMediantSymbols = _d === void 0 ? true : _d, _e = _b.addSequentialVerseNumbersStartingAt, addSequentialVerseNumbersStartingAt = _e === void 0 ? 1 : _e, addInitialVerseNumber = _b.addInitialVerseNumber, _f = _b.useLargeInitial, useLargeInitial = _f === void 0 ? true : _f;
+        var _c = _a === void 0 ? {} : _a, _d = _c.startVersesOnNewLine, startVersesOnNewLine = _d === void 0 ? true : _d, _e = _c.stripFlexMediantSymbols, stripFlexMediantSymbols = _e === void 0 ? true : _e, _f = _c.addSequentialVerseNumbersStartingAt, addSequentialVerseNumbersStartingAt = _f === void 0 ? 1 : _f, addInitialVerseNumber = _c.addInitialVerseNumber, _g = _c.useLargeInitial, useLargeInitial = _g === void 0 ? true : _g, _h = _c.barDictionary, barDictionary = _h === void 0 ? (_b = {},
+            _b[exports.VerseSegmentType.Flex] = ",",
+            _b[exports.VerseSegmentType.Mediant] = ";",
+            _b[exports.VerseSegmentType.Termination] = ":",
+            _b) : _h;
         var nextSequentialVerseNumber = addSequentialVerseNumbersStartingAt;
         if (addInitialVerseNumber !== undefined) {
             nextSequentialVerseNumber = addInitialVerseNumber;
@@ -186,14 +191,11 @@ var VerseText = /** @class */ (function () {
                 if (i === 0 ||
                     segments[i - 1].segmentType === exports.VerseSegmentType.Termination)
                     gabc = getNextVerseNumberString() + gabc;
-                switch (seg.segmentType) {
-                    case exports.VerseSegmentType.Flex:
-                        return gabc + " (,)";
-                    case exports.VerseSegmentType.Mediant:
-                        return gabc + " (:)";
-                    case exports.VerseSegmentType.Termination:
-                        return gabc + (" (::" + (startVersesOnNewLine ? "Z" : "") + ")");
+                var bar = barDictionary[seg.segmentType];
+                if (startVersesOnNewLine && seg.segmentType === exports.VerseSegmentType.Termination) {
+                    bar += "Z";
                 }
+                return gabc + (" (" + bar + ")");
             })
                 .join("\n\n"));
     };

@@ -1,3 +1,12 @@
+## [1.0.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.0.0...v1.0.1) (2020-06-09)
+
+
+### Features
+
+* **GabcPsalmTone:** Allow custom bars to be used for the flex, mediant, and termination ([1a334da](https://gitlab.com/sourceandsummit/gabc-utils/commit/1a334dad4125ec322c8aa2038c155ba8d6b6a753))
+
+
+
 # [1.0.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.0.0-alpha.8...v1.0.0) (2020-06-09)
 
 
