@@ -156,13 +156,14 @@ var VerseText = /** @class */ (function () {
         var _this = this;
         var _b = _a === void 0 ? {} : _a, _c = _b.startVersesOnNewLine, startVersesOnNewLine = _c === void 0 ? true : _c, _d = _b.stripFlexMediantSymbols, stripFlexMediantSymbols = _d === void 0 ? true : _d, _e = _b.addSequentialVerseNumbersStartingAt, addSequentialVerseNumbersStartingAt = _e === void 0 ? 1 : _e, addInitialVerseNumber = _b.addInitialVerseNumber, _f = _b.useLargeInitial, useLargeInitial = _f === void 0 ? true : _f;
         var nextSequentialVerseNumber = addSequentialVerseNumbersStartingAt;
-        if (nextSequentialVerseNumber <= 0)
-            nextSequentialVerseNumber = 0;
-        if (addInitialVerseNumber > 0) {
+        if (addInitialVerseNumber !== undefined) {
             nextSequentialVerseNumber = addInitialVerseNumber;
         }
         else {
             addInitialVerseNumber = 0;
+        }
+        if (nextSequentialVerseNumber <= 0) {
+            nextSequentialVerseNumber = 0;
         }
         var getNextVerseNumberString = function () {
             if (addInitialVerseNumber) {

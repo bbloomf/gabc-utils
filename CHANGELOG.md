@@ -1,3 +1,12 @@
+# [1.0.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.0.0-alpha.8...v1.0.0) (2020-06-09)
+
+
+### Bug Fixes
+
+* Fix initial verse number config ([9338b48](https://gitlab.com/sourceandsummit/gabc-utils/commit/9338b486cf337d195d4f77c685093c2ba5f81ba5))
+
+
+
 # [1.0.0-alpha.8](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.0.0-alpha.7...v1.0.0-alpha.8) (2020-06-09)
 
 
