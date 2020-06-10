@@ -39,9 +39,9 @@ export class VerseText {
   withGabc(
     psalmTone: GabcPsalmTones,
     {
-      startVersesOnNewLine = true,
+      startVersesOnNewLine = false,
       stripFlexMediantSymbols = true,
-      addSequentialVerseNumbersStartingAt = 1,
+      addSequentialVerseNumbersStartingAt = 0,
       addInitialVerseNumber,
       useLargeInitial = true,
       barDictionary = {
@@ -99,8 +99,14 @@ export class VerseText {
           )
             gabc = getNextVerseNumberString() + gabc;
           let bar = barDictionary[seg.segmentType];
-          if (startVersesOnNewLine && seg.segmentType === VerseSegmentType.Termination) {
-            bar += "Z";
+          if (seg.segmentType === VerseSegmentType.Termination) {
+            if (i === segments.length - 1) {
+              // force a double bar on the last segment:
+              bar = "::";
+            } else if (startVersesOnNewLine) {
+              // never add a line break unless it isn't the last segment
+              bar += "Z";
+            }
           }
           return gabc + ` (${bar})`;
         })
