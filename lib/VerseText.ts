@@ -377,7 +377,7 @@ class VerseSegment {
         endSylI = nextAccent
           ? (nextAccent.indexInSegment || 0) -
             (accentedSyllableAndAfter[0].indexInSegment || 0)
-          : accentedSyllableAndAfter.length - afterLastAccent.length;
+          : Math.max(1, accentedSyllableAndAfter.length - afterLastAccent.length);
       // endSylI points to the next accent or to the first syllable applicable to afterLastAccent
       accentTones.forEach((accentTone, i) => {
         if (sylI >= endSylI) return;
@@ -409,8 +409,9 @@ class VerseSegment {
       remainingSyllables.forEach(
         (syl, i) => (result += syl.withGabc(afterLastAccent[i].gabc))
       );
-    } else if (this.accentedSyllables.length) {
+    } else if (this.accentedSyllables.length && (remainingSyllables.length || afterLastAccent.length > 1)) {
       // only bother warning if there are actually marked accents in the text
+      // and there are remaining syllables, or more than one syllable after the accent in the psalm tone
       console.warn(
         "Invalid state when applying psalm tone...incorrect number of syllables remaining"
       );
