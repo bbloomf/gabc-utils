@@ -393,7 +393,7 @@ var VerseSegment = /** @class */ (function () {
             var nextAccent = _this.accentedSyllables[accents.length - 2 - accentI], endSylI = nextAccent
                 ? (nextAccent.indexInSegment || 0) -
                     (accentedSyllableAndAfter[0].indexInSegment || 0)
-                : accentedSyllableAndAfter.length - afterLastAccent.length;
+                : Math.max(1, accentedSyllableAndAfter.length - afterLastAccent.length);
             // endSylI points to the next accent or to the first syllable applicable to afterLastAccent
             accentTones.forEach(function (accentTone, i) {
                 if (sylI >= endSylI)
@@ -425,8 +425,9 @@ var VerseSegment = /** @class */ (function () {
         if (remainingSyllables.length === afterLastAccent.length) {
             remainingSyllables.forEach(function (syl, i) { return (result += syl.withGabc(afterLastAccent[i].gabc)); });
         }
-        else if (this.accentedSyllables.length) {
+        else if (this.accentedSyllables.length && (remainingSyllables.length || afterLastAccent.length > 1)) {
             // only bother warning if there are actually marked accents in the text
+            // and there are remaining syllables, or more than one syllable after the accent in the psalm tone
             console.warn("Invalid state when applying psalm tone...incorrect number of syllables remaining");
         }
         if (stripFlexMediantSymbols)

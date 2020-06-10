@@ -1,3 +1,12 @@
+## [1.1.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.1.0...v1.1.1) (2020-06-10)
+
+
+### Bug Fixes
+
+* **VerseText:** Properly handle psalm tones with a melisma on the last accent with texts that end on an accented syllable ([fcc5b8a](https://gitlab.com/sourceandsummit/gabc-utils/commit/fcc5b8a66a873de70d9db9a40cbe20a7c3284297))
+
+
+
 # [1.1.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.0.1...v1.1.0) (2020-06-10)
 
 
