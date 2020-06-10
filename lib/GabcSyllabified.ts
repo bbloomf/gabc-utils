@@ -14,7 +14,7 @@ export class GabcSyllabified {
     const { syllables, notationNodes } = GabcSyllabified.splitInputs(text, notation);
 
     let sylNdx = 0
-    let isFirstSyl = true;
+    let isFirstSyl = useLargeInitial;
     let result = notationNodes
       .map((notation) => {
         const { syllable, nextIndex, isFirstSyllable } = GabcSyllabified.mapSyllable(notation, syllables, sylNdx, isFirstSyl);
