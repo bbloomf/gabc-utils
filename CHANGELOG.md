@@ -1,3 +1,17 @@
+# [1.1.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.0.1...v1.1.0) (2020-06-10)
+
+
+### Bug Fixes
+
+* **GabcSyllabified:** Only capitalize the second letter if useLargeInitial is set to true ([0708702](https://gitlab.com/sourceandsummit/gabc-utils/commit/0708702e09941ede8504b33da46324b706eaaad0))
+
+
+### Features
+
+* **VerseText:** Always use a double bar at the end of a fully notated psalm tone ([4839a99](https://gitlab.com/sourceandsummit/gabc-utils/commit/4839a9903fd4fe58a7c747fc9e4c422228498ff2))
+
+
+
 ## [1.0.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.0.0...v1.0.1) (2020-06-09)
 
 

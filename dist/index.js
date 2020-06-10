@@ -4,12 +4,13 @@ var GabcSyllabified = /** @class */ (function () {
     function GabcSyllabified() {
     }
     GabcSyllabified.merge = function (syllabifiedText, musicalNotation, useLargeInitial) {
+        if (useLargeInitial === void 0) { useLargeInitial = true; }
         var _a = GabcSyllabified.normalizeInputs(syllabifiedText, musicalNotation), text = _a.text, notation = _a.notation;
         if (!notation)
             return text;
         var _b = GabcSyllabified.splitInputs(text, notation), syllables = _b.syllables, notationNodes = _b.notationNodes;
         var sylNdx = 0;
-        var isFirstSyl = true;
+        var isFirstSyl = useLargeInitial;
         var result = notationNodes
             .map(function (notation) {
             var _a = GabcSyllabified.mapSyllable(notation, syllables, sylNdx, isFirstSyl), syllable = _a.syllable, nextIndex = _a.nextIndex, isFirstSyllable = _a.isFirstSyllable;
@@ -155,7 +156,7 @@ var VerseText = /** @class */ (function () {
     VerseText.prototype.withGabc = function (psalmTone, _a) {
         var _b;
         var _this = this;
-        var _c = _a === void 0 ? {} : _a, _d = _c.startVersesOnNewLine, startVersesOnNewLine = _d === void 0 ? true : _d, _e = _c.stripFlexMediantSymbols, stripFlexMediantSymbols = _e === void 0 ? true : _e, _f = _c.addSequentialVerseNumbersStartingAt, addSequentialVerseNumbersStartingAt = _f === void 0 ? 1 : _f, addInitialVerseNumber = _c.addInitialVerseNumber, _g = _c.useLargeInitial, useLargeInitial = _g === void 0 ? true : _g, _h = _c.barDictionary, barDictionary = _h === void 0 ? (_b = {},
+        var _c = _a === void 0 ? {} : _a, _d = _c.startVersesOnNewLine, startVersesOnNewLine = _d === void 0 ? false : _d, _e = _c.stripFlexMediantSymbols, stripFlexMediantSymbols = _e === void 0 ? true : _e, _f = _c.addSequentialVerseNumbersStartingAt, addSequentialVerseNumbersStartingAt = _f === void 0 ? 0 : _f, addInitialVerseNumber = _c.addInitialVerseNumber, _g = _c.useLargeInitial, useLargeInitial = _g === void 0 ? true : _g, _h = _c.barDictionary, barDictionary = _h === void 0 ? (_b = {},
             _b[exports.VerseSegmentType.Flex] = ",",
             _b[exports.VerseSegmentType.Mediant] = ";",
             _b[exports.VerseSegmentType.Termination] = ":",
@@ -192,8 +193,15 @@ var VerseText = /** @class */ (function () {
                     segments[i - 1].segmentType === exports.VerseSegmentType.Termination)
                     gabc = getNextVerseNumberString() + gabc;
                 var bar = barDictionary[seg.segmentType];
-                if (startVersesOnNewLine && seg.segmentType === exports.VerseSegmentType.Termination) {
-                    bar += "Z";
+                if (seg.segmentType === exports.VerseSegmentType.Termination) {
+                    if (i === segments.length - 1) {
+                        // force a double bar on the last segment:
+                        bar = "::";
+                    }
+                    else if (startVersesOnNewLine) {
+                        // never add a line break unless it isn't the last segment
+                        bar += "Z";
+                    }
                 }
                 return gabc + (" (" + bar + ")");
             })
