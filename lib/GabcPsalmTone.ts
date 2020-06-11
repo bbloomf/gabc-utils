@@ -16,6 +16,7 @@ type GabcSingleTone = {
   gabc: string;
   accent?: boolean;
   open?: boolean;
+  toneAccentFork?: GabcSingleTone[][];
 };
 type GabcInfo = {
   tenor?: string;
@@ -48,7 +49,9 @@ export class GabcPsalmTone {
     options: GabcPsalmToneOptions = {},
     clef?: string
   ): GabcPsalmTones {
-    gabc = gabc.replace(/[()]+/g, " ");
+    if (!/\|/.test(gabc)) {
+      gabc = gabc.replace(/[()]+/g, " ");
+    }
     let originalGabc = gabc;
     let clefMatch = /^[^a-m]*((?:cb?|f)[1-4])/.exec(gabc);
     if (clefMatch) {
@@ -71,26 +74,29 @@ export class GabcPsalmTone {
     } else if (!clef) {
       clef = "c4";
     }
-    originalGabc = clef + " " + gabc.trim();
-    gabc = gabc.replace(/\/+/g, " ");
+    originalGabc = (clef + " " + gabc.trim()).replace(/\(([^|)]+)[^)]*\)/g, "$1");
+    gabc = gabc.replace(/\/+/g, " ").replace(/::\s*$/, "");
     let gabcSegments = gabc.split(" : ");
     if (gabcSegments.length != 2) {
       console.warn("GabcPsalmTone.getFromGabc called on invalid GABC:", gabc);
     }
-    let gabcPsalmTones = gabcSegments.map(gabc => {
-      gabc = gabc.replace(/::\s*$/, "").trim();
+
+    let gabcPsalmTones = gabcSegments.map((gabc) => {
+      gabc = gabc.trim();
       if (options.treatAsOneAccentWithXPreparatory) {
-        let match = gabc.match(/\s(([^\sr',;:])+)$/);
+        let match = gabc.match(/\s(([^\sr',;:()])+)$/);
         if (match) {
           // jr h i g => jr h i 'g gr g
           gabc =
-            gabc.slice(0, -match[0].length) +
+            gabc.slice(0, match.index) +
             " '" +
             match[1] +
             " " +
             match[2].toLowerCase() +
             "r " +
             match[2].toLowerCase();
+        } else {
+          gabc = gabc.replace(/\s\(([^)]+\|.*)\s([^\sr',;:()])\)$/, " '($1 $2r $2)");
         }
       }
       return new GabcPsalmTone(gabc, "", true, clef);
@@ -108,19 +114,30 @@ export class GabcPsalmTone {
   gabc: GabcInfo;
   syllableCounts: SyllableCounts;
 
-  constructor(gabc: string, prefix = "", flexEqualsTenor = false, clef = "c4") {
-    let tones: GabcSingleTone[] = (this.tones = []);
-    if (prefix) gabc = prefix + gabc;
+  static readonly getTonesForGabcString = (gabc) => {
     let match;
     let index = 0;
-    let regexToneGabc = /(')?(([^\sr]+)(r)?)(?=$|\s)/gi;
+    let regexToneGabc = /(')?(?:\(([^)]+)\)|([^\sr]+)(r)?)(?=$|\s)/gi;
+    let tones: GabcSingleTone[] = [];
     while ((match = regexToneGabc.exec(gabc))) {
-      tones.push({
+      let result: GabcSingleTone = {
         accent: match[1] == "'",
         gabc: match[3],
         open: match[4] == "r"
-      });
+      };
+      if (match[2]) {
+        result.toneAccentFork = match[2]
+          .split("|")
+          .map((gabc) => GabcPsalmTone.getTonesForGabcString(gabc));
+      }
+      tones.push(result);
     }
+    return tones;
+  };
+
+  constructor(gabc: string, prefix = "", flexEqualsTenor = false, clef = "c4") {
+    if (prefix) gabc = prefix + gabc;
+    let tones = (this.tones = GabcPsalmTone.getTonesForGabcString(gabc));
     var intonation: GabcSingleTone[] = [];
     var accentedTones: GabcSingleTone[][] = [];
     var currentAccentTone;
