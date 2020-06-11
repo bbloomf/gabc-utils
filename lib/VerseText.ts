@@ -379,6 +379,13 @@ class VerseSegment {
             (accentedSyllableAndAfter[0].indexInSegment || 0)
           : Math.max(1, accentedSyllableAndAfter.length - afterLastAccent.length);
       // endSylI points to the next accent or to the first syllable applicable to afterLastAccent
+      let useNonAccentNonOpen = false;
+      if(accentTones.length === 1 && accentTones[0].toneAccentFork) {
+        // toneAccentFork contains [accent on last syllable, accent on penult, accent on antepenult or earlier]:
+        const accentForkIndex = Math.min(2, endSylI - 1);
+        accentTones = accentTones[0].toneAccentFork[accentForkIndex];
+        useNonAccentNonOpen = true;
+      }
       accentTones.forEach((accentTone, i) => {
         if (sylI >= endSylI) return;
         let syl = accentedSyllableAndAfter[sylI];
@@ -401,6 +408,11 @@ class VerseSegment {
             result += syl.withGabc(accentTone.gabc);
             syl = accentedSyllableAndAfter[++sylI];
           }
+        } else if (useNonAccentNonOpen) {
+          // this is a forked accent tone, so we have already chosen the right one based on the number of syllables present;
+          // just use the tone and the syllable.
+          result += syl.withGabc(accentTone.gabc);
+          ++sylI;
         }
       });
     });
