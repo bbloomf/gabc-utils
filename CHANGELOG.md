@@ -1,3 +1,12 @@
+# [1.2.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.1.1...v1.2.0) (2020-06-11)
+
+
+### Features
+
+* **GabcPsalmTone:** Handle psalm tones that end in a melisma ([c42f89f](https://gitlab.com/sourceandsummit/gabc-utils/commit/c42f89fb3cd93fcc17c774a97391065aa42b55e4))
+
+
+
 ## [1.1.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.1.0...v1.1.1) (2020-06-10)
 
 

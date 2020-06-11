@@ -395,6 +395,13 @@ var VerseSegment = /** @class */ (function () {
                     (accentedSyllableAndAfter[0].indexInSegment || 0)
                 : Math.max(1, accentedSyllableAndAfter.length - afterLastAccent.length);
             // endSylI points to the next accent or to the first syllable applicable to afterLastAccent
+            var useNonAccentNonOpen = false;
+            if (accentTones.length === 1 && accentTones[0].toneAccentFork) {
+                // toneAccentFork contains [accent on last syllable, accent on penult, accent on antepenult or earlier]:
+                var accentForkIndex = Math.min(2, endSylI - 1);
+                accentTones = accentTones[0].toneAccentFork[accentForkIndex];
+                useNonAccentNonOpen = true;
+            }
             accentTones.forEach(function (accentTone, i) {
                 if (sylI >= endSylI)
                     return;
@@ -418,6 +425,12 @@ var VerseSegment = /** @class */ (function () {
                         result += syl.withGabc(accentTone.gabc);
                         syl = accentedSyllableAndAfter[++sylI];
                     }
+                }
+                else if (useNonAccentNonOpen) {
+                    // this is a forked accent tone, so we have already chosen the right one based on the number of syllables present;
+                    // just use the tone and the syllable.
+                    result += syl.withGabc(accentTone.gabc);
+                    ++sylI;
                 }
             });
         });
@@ -570,18 +583,9 @@ var GabcPsalmTone = /** @class */ (function () {
         if (prefix === void 0) { prefix = ""; }
         if (flexEqualsTenor === void 0) { flexEqualsTenor = false; }
         if (clef === void 0) { clef = "c4"; }
-        var tones = (this.tones = []);
         if (prefix)
             gabc = prefix + gabc;
-        var match;
-        var regexToneGabc = /(')?(([^\sr]+)(r)?)(?=$|\s)/gi;
-        while ((match = regexToneGabc.exec(gabc))) {
-            tones.push({
-                accent: match[1] == "'",
-                gabc: match[3],
-                open: match[4] == "r"
-            });
-        }
+        var tones = (this.tones = GabcPsalmTone.getTonesForGabcString(gabc));
         var intonation = [];
         var accentedTones = [];
         var currentAccentTone;
@@ -689,7 +693,9 @@ var GabcPsalmTone = /** @class */ (function () {
     GabcPsalmTone.getFromGabc = function (gabc, options, clef) {
         var _a;
         if (options === void 0) { options = {}; }
-        gabc = gabc.replace(/[()]+/g, " ");
+        if (!/\|/.test(gabc)) {
+            gabc = gabc.replace(/[()]+/g, " ");
+        }
         var originalGabc = gabc;
         var clefMatch = /^[^a-m]*((?:cb?|f)[1-4])/.exec(gabc);
         if (clefMatch) {
@@ -712,26 +718,29 @@ var GabcPsalmTone = /** @class */ (function () {
         else if (!clef) {
             clef = "c4";
         }
-        originalGabc = clef + " " + gabc.trim();
-        gabc = gabc.replace(/\/+/g, " ");
+        originalGabc = (clef + " " + gabc.trim()).replace(/\(([^|)]+)[^)]*\)/g, "$1");
+        gabc = gabc.replace(/\/+/g, " ").replace(/::\s*$/, "");
         var gabcSegments = gabc.split(" : ");
         if (gabcSegments.length != 2) {
             console.warn("GabcPsalmTone.getFromGabc called on invalid GABC:", gabc);
         }
         var gabcPsalmTones = gabcSegments.map(function (gabc) {
-            gabc = gabc.replace(/::\s*$/, "").trim();
+            gabc = gabc.trim();
             if (options.treatAsOneAccentWithXPreparatory) {
-                var match = gabc.match(/\s(([^\sr',;:])+)$/);
+                var match = gabc.match(/\s(([^\sr',;:()])+)$/);
                 if (match) {
                     // jr h i g => jr h i 'g gr g
                     gabc =
-                        gabc.slice(0, -match[0].length) +
+                        gabc.slice(0, match.index) +
                             " '" +
                             match[1] +
                             " " +
                             match[2].toLowerCase() +
                             "r " +
                             match[2].toLowerCase();
+                }
+                else {
+                    gabc = gabc.replace(/\s\(([^)]+\|.*)\s([^\sr',;:()])\)$/, " '($1 $2r $2)");
                 }
             }
             return new GabcPsalmTone(gabc, "", true, clef);
@@ -742,6 +751,25 @@ var GabcPsalmTone = /** @class */ (function () {
             _a.originalGabc = originalGabc,
             _a.clef = clef,
             _a;
+    };
+    GabcPsalmTone.getTonesForGabcString = function (gabc) {
+        var match;
+        var regexToneGabc = /(')?(?:\(([^)]+)\)|([^\sr]+)(r)?)(?=$|\s)/gi;
+        var tones = [];
+        while ((match = regexToneGabc.exec(gabc))) {
+            var result = {
+                accent: match[1] == "'",
+                gabc: match[3],
+                open: match[4] == "r"
+            };
+            if (match[2]) {
+                result.toneAccentFork = match[2]
+                    .split("|")
+                    .map(function (gabc) { return GabcPsalmTone.getTonesForGabcString(gabc); });
+            }
+            tones.push(result);
+        }
+        return tones;
     };
     return GabcPsalmTone;
 }());

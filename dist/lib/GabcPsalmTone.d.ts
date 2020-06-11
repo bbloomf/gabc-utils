@@ -13,6 +13,7 @@ declare type GabcSingleTone = {
     gabc: string;
     accent?: boolean;
     open?: boolean;
+    toneAccentFork?: GabcSingleTone[][];
 };
 declare type GabcInfo = {
     tenor?: string;
@@ -44,6 +45,7 @@ export declare class GabcPsalmTone {
     clef: string;
     gabc: GabcInfo;
     syllableCounts: SyllableCounts;
+    static readonly getTonesForGabcString: (gabc: any) => GabcSingleTone[];
     constructor(gabc: string, prefix?: string, flexEqualsTenor?: boolean, clef?: string);
 }
 export {};
