@@ -10,10 +10,10 @@ var GabcSyllabified = /** @class */ (function () {
             return text;
         var _b = GabcSyllabified.splitInputs(text, notation), syllables = _b.syllables, notationNodes = _b.notationNodes;
         var sylNdx = 0;
-        var isFirstSyl = useLargeInitial;
+        var isFirstSyl = true;
         var result = notationNodes
             .map(function (notation) {
-            var _a = GabcSyllabified.mapSyllable(notation, syllables, sylNdx, isFirstSyl), syllable = _a.syllable, nextIndex = _a.nextIndex, isFirstSyllable = _a.isFirstSyllable;
+            var _a = GabcSyllabified.mapSyllable(notation, syllables, sylNdx, isFirstSyl, useLargeInitial), syllable = _a.syllable, nextIndex = _a.nextIndex, isFirstSyllable = _a.isFirstSyllable;
             sylNdx = nextIndex;
             isFirstSyl = isFirstSyllable;
             return syllable;
@@ -47,7 +47,7 @@ var GabcSyllabified = /** @class */ (function () {
     };
     GabcSyllabified.splitInputs = function (text, notation) {
         var syllables = text
-            .split(/\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*\([^)]+\))|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
+            .split(/\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*\([^+)]+\))|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
             .filter(function (syl) { return syl && syl.trim(); });
         var notationNodes = notation.split(/\s+/);
         return { syllables: syllables, notationNodes: notationNodes };
@@ -56,49 +56,57 @@ var GabcSyllabified = /** @class */ (function () {
     GabcSyllabified.stripParens = function (s) {
         return s.replace(GabcSyllabified.regexFindParensWithLeadSpaces, '$1$2');
     };
+    GabcSyllabified.stripNonDisplayCharacters = function (syllable) {
+        return syllable.replace(/^(\s*)"?\((.*?)\)"?$/, '$1$2').replace(/^(\s*)[!(]/, '$1');
+    };
     // check whether a syllable text represents a syllable or not,
     //   It is considered non-syllabif if
     //     * it starts with !
     //     * it contains no letters
     //     * it is surrounded by parentheses
+    //     * It starts with a parenthesis and contains only letters and periods, e.g. `(E.T.` or `(T.P.`
     GabcSyllabified.isNonSyllableString = function (s) {
-        return /^(\s*!|(\s*[^\sa-záéíóúýàèìòùäëïöüÿæœǽœ́][^a-záéíóúýàèìòùäëïöüÿæœǽœ́]*)$|(\s*\(.*\))$|(\s*"\(.*\)"$))/i.test(s);
+        return /^(\s*!|(\s*[^\sa-záéíóúýàèìòùäëïöüÿæœǽœ́][^a-záéíóúýàèìòùäëïöüÿæœǽœ́]*)$|(\s*\((?:.*\)|[A-Z\.]+))$|(\s*"\(.*\)"$))/i.test(s);
     };
     /*-----  GETTER FUNCTIONS  -----*/
     GabcSyllabified.getSyllable = function (syllables, index) {
-        return (syllables[index] || ' ').replace(/^(\s*)"(.*)"$/, '$1$2');
+        return (syllables[index] || ' ').replace(/\)([^a-z]*)$/i, "$1").replace(/^(\s*)"(.*)"$/, '$1$2');
     };
     GabcSyllabified.getNonSyllable = function (syllables, syllableNdx, notation) {
         var syllable = syllables[syllableNdx];
         if (GabcSyllabified.isNonSyllableString(syllable) &&
             !GabcSyllabified.regexClef.test(notation)) {
-            return syllable.replace(/^(\s*)!/, '$1')
-                .replace(/^(\s*)"?\((.*?)\)"?$/, '$1$2');
+            return GabcSyllabified.stripNonDisplayCharacters(syllable);
         }
-        return ' ';
+        return '';
+    };
+    GabcSyllabified.getNonSyllableOrSpace = function (syllables, syllableNdx, notation) {
+        return GabcSyllabified.getNonSyllable(syllables, syllableNdx, notation) || ' ';
     };
     /*-----  PROCESSOR FUNCTIONS  -----*/
-    GabcSyllabified.mapSyllable = function (notation, syllables, sylNdx, isFirstSyllable) {
+    GabcSyllabified.mapSyllable = function (notation, syllables, sylNdx, isFirstSyllable, useLargeInitial) {
         var noSyllable = GabcSyllabified.regexNonSyllabicGabc.test(notation) || /^\(.*\)$/.test(notation);
         notation = GabcSyllabified.stripParens(notation);
-        var syllable = noSyllable ? GabcSyllabified.getNonSyllable(syllables, sylNdx, notation) : GabcSyllabified.getSyllable(syllables, sylNdx++);
+        var nonSyllable = GabcSyllabified.getNonSyllable(syllables, sylNdx, notation);
+        var syllable = noSyllable ? (nonSyllable || " ") : GabcSyllabified.getSyllable(syllables, sylNdx++);
         if (noSyllable) {
             if (/\S/.test(syllable))
                 sylNdx++;
         }
         else {
-            var nextSyllable = syllable;
-            syllable = GabcSyllabified.stripParens(syllable);
-            while (GabcSyllabified.isNonSyllableString(nextSyllable)) {
-                if (/^".*"$/.test(syllable)) {
-                    syllable = syllable.slice(1, -1);
+            if (nonSyllable) {
+                syllable = nonSyllable;
+                var nextNonSyllable = void 0;
+                while ((nextNonSyllable = GabcSyllabified.getNonSyllable(syllables, sylNdx++))) {
+                    syllable += "()" + nextNonSyllable;
                 }
-                nextSyllable = GabcSyllabified.getSyllable(syllables, sylNdx++);
-                syllable += '()' + GabcSyllabified.stripParens(nextSyllable);
+                syllable += "()" + GabcSyllabified.getSyllable(syllables, sylNdx - 1);
             }
             if (isFirstSyllable) {
                 isFirstSyllable = false;
-                syllable = GabcSyllabified.capitalizeInitial(syllable, syllables[sylNdx]);
+                if (useLargeInitial) {
+                    syllable = GabcSyllabified.capitalizeInitial(syllable, syllables[sylNdx]);
+                }
             }
         }
         syllable = syllable + '(' + notation + ')';

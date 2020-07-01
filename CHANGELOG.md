@@ -1,3 +1,12 @@
+# [1.3.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.2.0...v1.3.0) (2020-07-01)
+
+
+### Features
+
+* **GabcSyllabified:** Handle texts that end with `(E.T. al+le+lu+ia).` properly ([0f93ad0](https://gitlab.com/sourceandsummit/gabc-utils/commit/0f93ad02365b862c209d1039ba48e64df6d7ab31))
+
+
+
 # [1.2.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.1.1...v1.2.0) (2020-06-11)
 
 
