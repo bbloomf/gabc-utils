@@ -14,10 +14,10 @@ export class GabcSyllabified {
     const { syllables, notationNodes } = GabcSyllabified.splitInputs(text, notation);
 
     let sylNdx = 0
-    let isFirstSyl = useLargeInitial;
+    let isFirstSyl = true;
     let result = notationNodes
       .map((notation) => {
-        const { syllable, nextIndex, isFirstSyllable } = GabcSyllabified.mapSyllable(notation, syllables, sylNdx, isFirstSyl);
+        const { syllable, nextIndex, isFirstSyllable } = GabcSyllabified.mapSyllable(notation, syllables, sylNdx, isFirstSyl, useLargeInitial);
         sylNdx = nextIndex;
         isFirstSyl = isFirstSyllable;
         return syllable;
@@ -61,10 +61,10 @@ export class GabcSyllabified {
 
   static splitInputs(text: string, notation: string): { syllables: string[], notationNodes: string[] } {
     const syllables = text
-    .split(/\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*\([^)]+\))|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
+    .split(/\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*\([^+)]+\))|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
       .filter(syl => syl && syl.trim())
     ;
-    
+
     const notationNodes = notation.split(/\s+/);
 
     return { syllables, notationNodes };
@@ -76,34 +76,40 @@ export class GabcSyllabified {
         s.replace(GabcSyllabified.regexFindParens, '$1')
     ;
   }
+  static stripNonDisplayCharacters(syllable: string) {
+    return syllable.replace(/^(\s*)"?\((.*?)\)"?$/, '$1$2').replace(/^(\s*)[!(]/, '$1');
+  }
   // check whether a syllable text represents a syllable or not,
   //   It is considered non-syllabif if
   //     * it starts with !
   //     * it contains no letters
   //     * it is surrounded by parentheses
+  //     * It starts with a parenthesis and contains only letters and periods, e.g. `(E.T.` or `(T.P.`
   static isNonSyllableString (s: string) {
-    return /^(\s*!|(\s*[^\sa-záéíóúýàèìòùäëïöüÿæœǽœ́][^a-záéíóúýàèìòùäëïöüÿæœǽœ́]*)$|(\s*\(.*\))$|(\s*"\(.*\)"$))/i.test(s);
+    return /^(\s*!|(\s*[^\sa-záéíóúýàèìòùäëïöüÿæœǽœ́][^a-záéíóúýàèìòùäëïöüÿæœǽœ́]*)$|(\s*\((?:.*\)|[A-Z\.]+))$|(\s*"\(.*\)"$))/i.test(s);
   }
 
 
   /*-----  GETTER FUNCTIONS  -----*/
   static getSyllable(syllables: string[], index: number) {
-    return (syllables[index] || ' ').replace(/^(\s*)"(.*)"$/, '$1$2');
+    return (syllables[index] || ' ').replace(/\)([^a-z]*)$/i,"$1").replace(/^(\s*)"(.*)"$/, '$1$2');
   }
 
-  static getNonSyllable(syllables: string[], syllableNdx: number, notation: string): string {
+  static getNonSyllable(syllables: string[], syllableNdx: number, notation?: string): string {
     let syllable = syllables[syllableNdx];
 
     if(
       GabcSyllabified.isNonSyllableString(syllable) &&
       !GabcSyllabified.regexClef.test(notation)
     ) {
-      return syllable.replace(/^(\s*)!/, '$1')
-          .replace(/^(\s*)"?\((.*?)\)"?$/, '$1$2')
-      ;
+      return GabcSyllabified.stripNonDisplayCharacters(syllable);
     }
 
-    return ' ';
+    return '';
+  }
+
+  static getNonSyllableOrSpace(syllables: string[], syllableNdx: number, notation?: string): string {
+    return GabcSyllabified.getNonSyllable(syllables, syllableNdx, notation) || ' ';
   }
 
   /*-----  PROCESSOR FUNCTIONS  -----*/
@@ -111,31 +117,31 @@ export class GabcSyllabified {
     notation: string,
     syllables: string[],
     sylNdx: number,
-    isFirstSyllable: boolean
+    isFirstSyllable: boolean,
+    useLargeInitial?: boolean
   ): { syllable: string, nextIndex: number, isFirstSyllable: boolean } {
     const noSyllable = GabcSyllabified.regexNonSyllabicGabc.test(notation) || /^\(.*\)$/.test(notation);
     notation = GabcSyllabified.stripParens(notation);
 
-    let syllable = noSyllable ? GabcSyllabified.getNonSyllable(syllables, sylNdx, notation) : GabcSyllabified.getSyllable(syllables, sylNdx++);
+    let nonSyllable = GabcSyllabified.getNonSyllable(syllables, sylNdx, notation);
+    let syllable = noSyllable ? (nonSyllable || " ") : GabcSyllabified.getSyllable(syllables, sylNdx++);
     if (noSyllable) {
       if(/\S/.test(syllable)) sylNdx++;
     } else {
-      let nextSyllable = syllable;
-      syllable = GabcSyllabified.stripParens(syllable);
-
-      while (GabcSyllabified.isNonSyllableString(nextSyllable)) {
-        if (/^".*"$/.test(syllable)) {
-          syllable = syllable.slice(1, -1);
+      if (nonSyllable) {
+        syllable = nonSyllable;
+        let nextNonSyllable: string;
+        while ((nextNonSyllable = GabcSyllabified.getNonSyllable(syllables, sylNdx++))) {
+          syllable += `()${nextNonSyllable}`
         }
-
-        nextSyllable = GabcSyllabified.getSyllable(syllables, sylNdx++);
-        syllable += '()' + GabcSyllabified.stripParens(nextSyllable);
+        syllable += `()${GabcSyllabified.getSyllable(syllables, sylNdx - 1)}`
       }
 
       if (isFirstSyllable) {
         isFirstSyllable = false;
-
-        syllable = GabcSyllabified.capitalizeInitial(syllable, syllables[sylNdx]);
+        if(useLargeInitial) {
+          syllable = GabcSyllabified.capitalizeInitial(syllable, syllables[sylNdx]);
+        }
       }
     }
 
