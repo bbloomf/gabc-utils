@@ -1,3 +1,12 @@
+## [1.3.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.3.0...v1.3.1) (2020-07-06)
+
+
+### Bug Fixes
+
+* **GabcSyllabified:** Properly handle punctuation and capitalization around (E.T. alleluia) ([85bad8a](https://gitlab.com/sourceandsummit/gabc-utils/commit/85bad8ab0d644fc4c40f43a63addd0b6e86d1f7e))
+
+
+
 # [1.3.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.2.0...v1.3.0) (2020-07-01)
 
 
