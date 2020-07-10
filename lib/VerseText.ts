@@ -7,19 +7,18 @@ export type FormattedString = {
 export enum VerseSegmentType {
   Flex = "flex",
   Mediant = "mediant",
-  Termination = "termination",
+  Termination = "termination"
 }
 
-export const defaultSyllabifier: Syllabifier = (text) =>
-  text
-    .replace(/\\forceHyphen\s+(\S+)\s+--\s+/g, "$1-")
-    .replace(/\s+--\s+/g, "+")
-    .replace(/(\|\S+\|)(\S)/gi, "$1+$2")
-    .replace(/(\S)(\|\S+\|)/gi, "$1+$2")
-    .replace(/(\S-)(\S)/gi, "$1+$2")
-    .split(/\+/g);
-
 export class VerseText {
+  static readonly defaultSyllabifier: Syllabifier = (text) =>
+    text
+      .replace(/\\forceHyphen\s+(\S+)\s+--\s+/g, "$1-")
+      .replace(/\s+--\s+/g, "+")
+      .replace(/(\|\S+\|)(\S)/gi, "$1+$2")
+      .replace(/(\S)(\|\S+\|)/gi, "$1+$2")
+      .replace(/(\S-)(\S)/gi, "$1+$2")
+      .split(/\+/g);
   segments: VerseSegment[];
 
   /**
@@ -27,7 +26,10 @@ export class VerseText {
    * @param text the text to be split into segments
    * @param syllabifier a function that takes a word string and returns an array of its syllables
    */
-  constructor(text: string, syllabifier: Syllabifier = defaultSyllabifier) {
+  constructor(
+    text: string,
+    syllabifier: Syllabifier = VerseText.defaultSyllabifier
+  ) {
     this.segments = VerseText.splitIntoSegments(text, syllabifier);
   }
 
@@ -43,21 +45,31 @@ export class VerseText {
       stripFlexMediantSymbols = true,
       addSequentialVerseNumbersStartingAt = 0,
       addInitialVerseNumber,
+      minSylsOnRecitingTone = 2,
       useLargeInitial = true,
       barDictionary = {
         [VerseSegmentType.Flex]: ",",
         [VerseSegmentType.Mediant]: ";",
-        [VerseSegmentType.Termination]: ":",
+        [VerseSegmentType.Termination]: ":"
       }
     }: {
       startVersesOnNewLine?: boolean;
       stripFlexMediantSymbols?: boolean;
       addSequentialVerseNumbersStartingAt?: number;
       addInitialVerseNumber?: number;
+      minSylsOnRecitingTone?: number;
       useLargeInitial?: boolean;
-      barDictionary?: { [k in VerseSegmentType]: string}
+      barDictionary?: { [k in VerseSegmentType]: string };
     } = {}
   ) {
+    if (psalmTone.isMeinrad) {
+      // some default overrides for meinrad tones, and a check to make sure there are 2-6 segments
+      if (this.segments.length < 2 || this.segments.length > 6) {
+        throw `Cannot use a Meinrad tone with a ${this.segments.length} line text.`;
+      }
+      stripFlexMediantSymbols = true;
+      barDictionary[VerseSegmentType.Flex] = ";";
+    }
     let nextSequentialVerseNumber = addSequentialVerseNumbersStartingAt;
     if (addInitialVerseNumber !== undefined) {
       nextSequentialVerseNumber = addInitialVerseNumber;
@@ -68,7 +80,7 @@ export class VerseText {
       nextSequentialVerseNumber = 0;
     }
     const getNextVerseNumberString = () => {
-      if(addInitialVerseNumber) {
+      if (addInitialVerseNumber) {
         const result = `${nextSequentialVerseNumber}. `;
         addInitialVerseNumber = 0;
         nextSequentialVerseNumber = 0;
@@ -78,7 +90,14 @@ export class VerseText {
         ? `${nextSequentialVerseNumber++}. `
         : "";
     };
-    useLargeInitial = useLargeInitial && !addSequentialVerseNumbersStartingAt && !addInitialVerseNumber;
+    useLargeInitial =
+      useLargeInitial &&
+      !addSequentialVerseNumbersStartingAt &&
+      !addInitialVerseNumber;
+    const stanzaCount = this.segments.filter(
+      (segment) => segment.segmentType === VerseSegmentType.Termination
+    ).length;
+    let stanzaI = 0;
     return (
       `(${psalmTone.clef}) ` +
       this.segments
@@ -86,20 +105,48 @@ export class VerseText {
           let useFlex = seg.segmentType === VerseSegmentType.Flex,
             segmentName = useFlex ? VerseSegmentType.Mediant : seg.segmentType,
             tone = psalmTone[segmentName];
+          if (psalmTone.isMeinrad) {
+            tone = psalmTone.lines[this.segments.length][i];
+            useFlex = false;
+          } else if (psalmTone.lines.length > 1) {
+            let toneIndex;
+            if (psalmTone.lines.length === 2) {
+              toneIndex = stanzaI < stanzaCount - 1 ? 0 : 1;
+            } else {
+              toneIndex = Math.floor(
+                (psalmTone.lines.length * stanzaI) / stanzaCount
+              );
+            }
+            tone = psalmTone.lines[toneIndex][segmentName];
+          }
           let gabc = seg.withGabc(
             tone as GabcPsalmTone,
             i == 0 || i == this.segments.length - 1, // use intonation on first and last segment
             useFlex,
             stripFlexMediantSymbols,
-            i === 0 && useLargeInitial
+            i === 0 && useLargeInitial,
+            minSylsOnRecitingTone
           );
           if (
             i === 0 ||
             segments[i - 1].segmentType === VerseSegmentType.Termination
-          )
+          ) {
             gabc = getNextVerseNumberString() + gabc;
-          let bar = barDictionary[seg.segmentType];
+          }
+          let bar: string;
+          if (psalmTone.isMeinrad) {
+            if (i === 0) {
+              bar = segments.length === 2 ? ";" : ",";
+            } else if (i === segments.length - 1) {
+              bar = "::";
+            } else {
+              bar = i % 2 === 0 ? "," : ";";
+            }
+          } else {
+            bar = barDictionary[seg.segmentType];
+          }
           if (seg.segmentType === VerseSegmentType.Termination) {
+            ++stanzaI;
             if (i === segments.length - 1) {
               // force a double bar on the last segment:
               bar = "::";
@@ -133,7 +180,7 @@ export class VerseText {
    */
   static splitIntoSegments(
     text: string,
-    syllabifier = defaultSyllabifier
+    syllabifier = VerseText.defaultSyllabifier
   ): VerseSegment[] {
     let segmentSplit = text.split(/[ \t]*([†*\n/])(\s*)/),
       segments: VerseSegment[] = [];
@@ -160,7 +207,7 @@ export class VerseText {
 const SegmentTypeDictionary = {
   "†": VerseSegmentType.Flex,
   "*": VerseSegmentType.Mediant,
-  "\n": VerseSegmentType.Termination,
+  "\n": VerseSegmentType.Termination
 };
 class VerseSegment {
   words: VerseWord[];
@@ -171,7 +218,7 @@ class VerseSegment {
 
   constructor(
     text: string,
-    syllabifier = defaultSyllabifier,
+    syllabifier = VerseText.defaultSyllabifier,
     type: VerseSegmentType = VerseSegmentType.Termination,
     additionalWhitespace?: string
   ) {
@@ -207,11 +254,13 @@ class VerseSegment {
     preparatory = 0,
     onlyMarkFirstPreparatory = false,
     syllableSeparator = "\xAD",
+    includeVerseNumbers = false
   }: {
     accents?: number;
     preparatory?: number;
     onlyMarkFirstPreparatory?: boolean;
     syllableSeparator?: string;
+    includeVerseNumbers?: boolean;
   } = {}): FormattedString[] {
     let markedAccents = this.accentedSyllables.slice(
       this.accentedSyllables.length - accents
@@ -224,10 +273,17 @@ class VerseSegment {
       firstAccentIndex - preparatory
     );
     let result: FormattedString[] = [];
+    const prefix =
+      (includeVerseNumbers &&
+        this.words[0].verseNumber &&
+        `${this.words[0].verseNumber} `) ||
+      "";
     let workingString: FormattedString = {
-      text: this.syllables
-        .slice(0, firstMarkedPreparatoryIndex)
-        .join(syllableSeparator),
+      text:
+        prefix +
+        this.syllables
+          .slice(0, firstMarkedPreparatoryIndex)
+          .join(syllableSeparator)
     };
     let nextSyllableIndex = firstMarkedPreparatoryIndex;
     let lastItalicIndex = onlyMarkFirstPreparatory
@@ -246,12 +302,12 @@ class VerseSegment {
           text:
             italics[0].withoutPreText() +
             italics.slice(1, -1).join("") +
-            lastItalic.withoutPostText(),
+            lastItalic.withoutPostText()
         };
       } else {
         workingString = {
           style: "italic",
-          text: italics[0].text,
+          text: italics[0].text
         };
       }
       result.push(workingString);
@@ -297,8 +353,12 @@ class VerseSegment {
     useIntonation = true,
     useFlex = false,
     stripFlexMediantSymbols = true,
-    useLargeInitial = false
+    useLargeInitial = false,
+    minSylsOnRecitingTone = 2
   ) {
+    if (this.syllables.length === 0) {
+      return "";
+    }
     let syllables = this.syllables.slice(),
       {
         intonation,
@@ -306,7 +366,7 @@ class VerseSegment {
         accents,
         afterLastAccent,
         tenor,
-        flex,
+        flex
       } = psalmTone.gabc,
       result = "";
     if (useLargeInitial && !syllables[0].preText) {
@@ -320,21 +380,16 @@ class VerseSegment {
         firstSyllable.postText,
         firstSyllable.word
       );
-      if(firstSyllable.lastOfWord && firstSyllable.text.length === 3) {
+      if (firstSyllable.lastOfWord && firstSyllable.text.length === 3) {
         firstSyllable.text = firstSyllable.text.toUpperCase();
       } else {
-        firstSyllable.text = firstSyllable.text.slice(0, 2).toUpperCase() + firstSyllable.text.slice(2).toLowerCase();
+        firstSyllable.text =
+          firstSyllable.text.slice(0, 2).toUpperCase() +
+          firstSyllable.text.slice(2).toLowerCase();
       }
     }
     if (useFlex) {
-      afterLastAccent = [{ gabc: flex || "" }];
-      accents = [
-        [
-          { accent: true, gabc: tenor || "" },
-          { open: true, gabc: flex || "" },
-        ],
-      ];
-      preparatory = [];
+      ({ afterLastAccent, preparatory, accents } = psalmTone.getFlexTone("en"));
     }
     let firstInterestingAccent = this.accentedSyllables[
         psalmTone.gabc.accents.length - 1
@@ -352,6 +407,14 @@ class VerseSegment {
       accentedSyllableAndAfter = syllables.slice(
         indexOfFirstPreparatory + preparatory.length
       );
+
+    if (useIntonation) {
+      const syllablesOnRecitingTone =
+        syllablesBeforePreparatory.length - intonation.length;
+      if (syllablesOnRecitingTone < minSylsOnRecitingTone) {
+        useIntonation = false;
+      }
+    }
 
     // prepare GABC of intonation (if any)
     if (!useIntonation) intonation = [];
@@ -377,10 +440,13 @@ class VerseSegment {
         endSylI = nextAccent
           ? (nextAccent.indexInSegment || 0) -
             (accentedSyllableAndAfter[0].indexInSegment || 0)
-          : Math.max(1, accentedSyllableAndAfter.length - afterLastAccent.length);
+          : Math.max(
+              1,
+              accentedSyllableAndAfter.length - afterLastAccent.length
+            );
       // endSylI points to the next accent or to the first syllable applicable to afterLastAccent
       let useNonAccentNonOpen = false;
-      if(accentTones.length === 1 && accentTones[0].toneAccentFork) {
+      if (accentTones.length === 1 && accentTones[0].toneAccentFork) {
         // toneAccentFork contains [accent on last syllable, accent on penult, accent on antepenult or earlier]:
         const accentForkIndex = Math.min(2, endSylI - 1);
         accentTones = accentTones[0].toneAccentFork[accentForkIndex];
@@ -421,7 +487,10 @@ class VerseSegment {
       remainingSyllables.forEach(
         (syl, i) => (result += syl.withGabc(afterLastAccent[i].gabc))
       );
-    } else if (this.accentedSyllables.length && (remainingSyllables.length || afterLastAccent.length > 1)) {
+    } else if (
+      this.accentedSyllables.length &&
+      (remainingSyllables.length || afterLastAccent.length > 1)
+    ) {
       // only bother warning if there are actually marked accents in the text
       // and there are remaining syllables, or more than one syllable after the accent in the psalm tone
       console.warn(
@@ -436,11 +505,14 @@ class VerseSegment {
     return this.words.join(" ");
   }
 
-  static splitIntoWords(text: string, syllabifier = defaultSyllabifier) {
+  static splitIntoWords(
+    text: string,
+    syllabifier = VerseText.defaultSyllabifier
+  ) {
     let wordSplit = text
       .trim()
       .split(
-        /([,;:.!?"'’”»\]\)—–-]*)(?:$|\s+|^)(?:\[?(\d+(?:[a-l]\b)?)\.?\]?\s*)?([\(\[«“‘'"¿¡—–-]*)/
+        /([,;:.!?"'’”»\]\)—–-]*)(?:$|\s+|^)(?:\[?((?:\d+:\s*)?\d+(?:[a-l]\b)?)\.?\]?\s*)?([\(\[«“‘'"¿¡—–-]*)/
       );
     // the text is now split into an array composed of text that didn't match
     // the regex, followed by the first group of the regex, and the second
@@ -498,7 +570,7 @@ class VerseWord {
     text: string,
     pre: string,
     post: string,
-    syllabifier = defaultSyllabifier,
+    syllabifier = VerseText.defaultSyllabifier,
     verseNumber?: string
   ) {
     if (verseNumber) this.verseNumber = verseNumber;
