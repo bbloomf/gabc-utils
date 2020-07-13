@@ -1,13 +1,19 @@
 import { VerseSegmentType } from "./VerseText";
-export declare type GabcPsalmTones = {
-    [VerseSegmentType.Flex]?: GabcPsalmTone;
-    [VerseSegmentType.Mediant]: GabcPsalmTone;
-    [VerseSegmentType.Termination]: GabcPsalmTone;
-    originalGabc: string;
+export declare type GabcPsalmTones = GabcPsalmToneChunk & {
+    lines?: (GabcPsalmToneChunk | GabcPsalmTone[])[];
+    isMeinrad: boolean;
+    originalGabc?: string;
     clef: string;
+};
+export declare type GabcPsalmToneChunk = {
+    [VerseSegmentType.Flex]?: GabcPsalmTone;
+    [VerseSegmentType.Mediant]?: GabcPsalmTone;
+    [VerseSegmentType.Termination]: GabcPsalmTone;
 };
 export declare type GabcPsalmToneOptions = {
     treatAsOneAccentWithXPreparatory?: boolean;
+    useFlex?: boolean;
+    isMeinrad?: boolean;
 };
 declare type GabcSingleTone = {
     gabc: string;
@@ -30,6 +36,7 @@ declare type SyllableCounts = {
     afterLastAccent: number;
 };
 export declare class GabcPsalmTone {
+    getFlexTone(language: string): GabcInfo;
     /**
      * Takes gabc like `(jr//////////k//j)(:)(jr////////h///i//g)(::)` or
      *                 `jr k j : jr h i g ::

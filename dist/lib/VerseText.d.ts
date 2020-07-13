@@ -9,8 +9,8 @@ export declare enum VerseSegmentType {
     Mediant = "mediant",
     Termination = "termination"
 }
-export declare const defaultSyllabifier: Syllabifier;
 export declare class VerseText {
+    static readonly defaultSyllabifier: Syllabifier;
     segments: VerseSegment[];
     /**
      *
@@ -23,11 +23,12 @@ export declare class VerseText {
      * @param  {Object} psalmTone hash of GabcPsalmTones for flex, mediant, and termination
      * @return {string}           GABC string
      */
-    withGabc(psalmTone: GabcPsalmTones, { startVersesOnNewLine, stripFlexMediantSymbols, addSequentialVerseNumbersStartingAt, addInitialVerseNumber, useLargeInitial, barDictionary }?: {
+    withGabc(psalmTone: GabcPsalmTones, { startVersesOnNewLine, stripFlexMediantSymbols, addSequentialVerseNumbersStartingAt, addInitialVerseNumber, minSylsOnRecitingTone, useLargeInitial, barDictionary }?: {
         startVersesOnNewLine?: boolean;
         stripFlexMediantSymbols?: boolean;
         addSequentialVerseNumbersStartingAt?: number;
         addInitialVerseNumber?: number;
+        minSylsOnRecitingTone?: number;
         useLargeInitial?: boolean;
         barDictionary?: {
             [k in VerseSegmentType]: string;
@@ -57,18 +58,19 @@ declare class VerseSegment {
      * @param  {string} syllableSeparator string used to separate syllables within the same word, defaults to \xAD
      * @return {Object[]}             Array of {text, style} objects
      */
-    getFormattedStrings({ accents, preparatory, onlyMarkFirstPreparatory, syllableSeparator, }?: {
+    getFormattedStrings({ accents, preparatory, onlyMarkFirstPreparatory, syllableSeparator, includeVerseNumbers }?: {
         accents?: number;
         preparatory?: number;
         onlyMarkFirstPreparatory?: boolean;
         syllableSeparator?: string;
+        includeVerseNumbers?: boolean;
     }): FormattedString[];
     /**
      * returns GABC for this verse segment
      * @param  {GabcPsalmTone} psalmTone definition for the psalm tone GABC
      * @return {string}           GABC string
      */
-    withGabc(psalmTone: GabcPsalmTone, useIntonation?: boolean, useFlex?: boolean, stripFlexMediantSymbols?: boolean, useLargeInitial?: boolean): string;
+    withGabc(psalmTone: GabcPsalmTone, useIntonation?: boolean, useFlex?: boolean, stripFlexMediantSymbols?: boolean, useLargeInitial?: boolean, minSylsOnRecitingTone?: number): string;
     toString(): string;
     static splitIntoWords(text: string, syllabifier?: Syllabifier): any[];
 }

@@ -134,20 +134,37 @@ var GabcSyllabified = /** @class */ (function () {
     return GabcSyllabified;
 }());
 
+/*! *****************************************************************************
+Copyright (c) Microsoft Corporation.
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+
+var __assign = function() {
+    __assign = Object.assign || function __assign(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+
 (function (VerseSegmentType) {
     VerseSegmentType["Flex"] = "flex";
     VerseSegmentType["Mediant"] = "mediant";
     VerseSegmentType["Termination"] = "termination";
 })(exports.VerseSegmentType || (exports.VerseSegmentType = {}));
-var defaultSyllabifier = function (text) {
-    return text
-        .replace(/\\forceHyphen\s+(\S+)\s+--\s+/g, "$1-")
-        .replace(/\s+--\s+/g, "+")
-        .replace(/(\|\S+\|)(\S)/gi, "$1+$2")
-        .replace(/(\S)(\|\S+\|)/gi, "$1+$2")
-        .replace(/(\S-)(\S)/gi, "$1+$2")
-        .split(/\+/g);
-};
 var VerseText = /** @class */ (function () {
     /**
      *
@@ -155,7 +172,7 @@ var VerseText = /** @class */ (function () {
      * @param syllabifier a function that takes a word string and returns an array of its syllables
      */
     function VerseText(text, syllabifier) {
-        if (syllabifier === void 0) { syllabifier = defaultSyllabifier; }
+        if (syllabifier === void 0) { syllabifier = VerseText.defaultSyllabifier; }
         this.segments = VerseText.splitIntoSegments(text, syllabifier);
     }
     /**
@@ -166,11 +183,19 @@ var VerseText = /** @class */ (function () {
     VerseText.prototype.withGabc = function (psalmTone, _a) {
         var _b;
         var _this = this;
-        var _c = _a === void 0 ? {} : _a, _d = _c.startVersesOnNewLine, startVersesOnNewLine = _d === void 0 ? false : _d, _e = _c.stripFlexMediantSymbols, stripFlexMediantSymbols = _e === void 0 ? true : _e, _f = _c.addSequentialVerseNumbersStartingAt, addSequentialVerseNumbersStartingAt = _f === void 0 ? 0 : _f, addInitialVerseNumber = _c.addInitialVerseNumber, _g = _c.useLargeInitial, useLargeInitial = _g === void 0 ? true : _g, _h = _c.barDictionary, barDictionary = _h === void 0 ? (_b = {},
+        var _c = _a === void 0 ? {} : _a, _d = _c.startVersesOnNewLine, startVersesOnNewLine = _d === void 0 ? false : _d, _e = _c.stripFlexMediantSymbols, stripFlexMediantSymbols = _e === void 0 ? true : _e, _f = _c.addSequentialVerseNumbersStartingAt, addSequentialVerseNumbersStartingAt = _f === void 0 ? 0 : _f, addInitialVerseNumber = _c.addInitialVerseNumber, _g = _c.minSylsOnRecitingTone, minSylsOnRecitingTone = _g === void 0 ? 2 : _g, _h = _c.useLargeInitial, useLargeInitial = _h === void 0 ? true : _h, _j = _c.barDictionary, barDictionary = _j === void 0 ? (_b = {},
             _b[exports.VerseSegmentType.Flex] = ",",
             _b[exports.VerseSegmentType.Mediant] = ";",
             _b[exports.VerseSegmentType.Termination] = ":",
-            _b) : _h;
+            _b) : _j;
+        if (psalmTone.isMeinrad) {
+            // some default overrides for meinrad tones, and a check to make sure there are 2-6 segments
+            if (this.segments.length < 2 || this.segments.length > 6) {
+                throw "Cannot use a Meinrad tone with a " + this.segments.length + " line text.";
+            }
+            stripFlexMediantSymbols = true;
+            barDictionary[exports.VerseSegmentType.Flex] = ";";
+        }
         var nextSequentialVerseNumber = addSequentialVerseNumbersStartingAt;
         if (addInitialVerseNumber !== undefined) {
             nextSequentialVerseNumber = addInitialVerseNumber;
@@ -192,18 +217,53 @@ var VerseText = /** @class */ (function () {
                 ? nextSequentialVerseNumber++ + ". "
                 : "";
         };
-        useLargeInitial = useLargeInitial && !addSequentialVerseNumbersStartingAt && !addInitialVerseNumber;
+        useLargeInitial =
+            useLargeInitial &&
+                !addSequentialVerseNumbersStartingAt &&
+                !addInitialVerseNumber;
+        var stanzaCount = this.segments.filter(function (segment) { return segment.segmentType === exports.VerseSegmentType.Termination; }).length;
+        var stanzaI = 0;
         return ("(" + psalmTone.clef + ") " +
             this.segments
                 .map(function (seg, i, segments) {
                 var useFlex = seg.segmentType === exports.VerseSegmentType.Flex, segmentName = useFlex ? exports.VerseSegmentType.Mediant : seg.segmentType, tone = psalmTone[segmentName];
+                if (psalmTone.isMeinrad) {
+                    tone = psalmTone.lines[_this.segments.length][i];
+                    useFlex = false;
+                }
+                else if (psalmTone.lines.length > 1) {
+                    var toneIndex = void 0;
+                    if (psalmTone.lines.length === 2) {
+                        toneIndex = stanzaI < stanzaCount - 1 ? 0 : 1;
+                    }
+                    else {
+                        toneIndex = Math.floor((psalmTone.lines.length * stanzaI) / stanzaCount);
+                    }
+                    tone = psalmTone.lines[toneIndex][segmentName];
+                }
                 var gabc = seg.withGabc(tone, i == 0 || i == _this.segments.length - 1, // use intonation on first and last segment
-                useFlex, stripFlexMediantSymbols, i === 0 && useLargeInitial);
+                useFlex, stripFlexMediantSymbols, i === 0 && useLargeInitial, minSylsOnRecitingTone);
                 if (i === 0 ||
-                    segments[i - 1].segmentType === exports.VerseSegmentType.Termination)
+                    segments[i - 1].segmentType === exports.VerseSegmentType.Termination) {
                     gabc = getNextVerseNumberString() + gabc;
-                var bar = barDictionary[seg.segmentType];
+                }
+                var bar;
+                if (psalmTone.isMeinrad) {
+                    if (i === 0) {
+                        bar = segments.length === 2 ? ";" : ",";
+                    }
+                    else if (i === segments.length - 1) {
+                        bar = "::";
+                    }
+                    else {
+                        bar = i % 2 === 0 ? "," : ";";
+                    }
+                }
+                else {
+                    bar = barDictionary[seg.segmentType];
+                }
                 if (seg.segmentType === exports.VerseSegmentType.Termination) {
+                    ++stanzaI;
                     if (i === segments.length - 1) {
                         // force a double bar on the last segment:
                         bar = "::";
@@ -234,7 +294,7 @@ var VerseText = /** @class */ (function () {
      * @return {VerseSegment[]}       the array of VerseSegment objects
      */
     VerseText.splitIntoSegments = function (text, syllabifier) {
-        if (syllabifier === void 0) { syllabifier = defaultSyllabifier; }
+        if (syllabifier === void 0) { syllabifier = VerseText.defaultSyllabifier; }
         var segmentSplit = text.split(/[ \t]*([†*\n/])(\s*)/), segments = [];
         for (var i = 0; i < segmentSplit.length; i += 3) {
             var text_1 = segmentSplit[i];
@@ -245,16 +305,25 @@ var VerseText = /** @class */ (function () {
         }
         return segments;
     };
+    VerseText.defaultSyllabifier = function (text) {
+        return text
+            .replace(/\\forceHyphen\s+(\S+)\s+--\s+/g, "$1-")
+            .replace(/\s+--\s+/g, "+")
+            .replace(/(\|\S+\|)(\S)/gi, "$1+$2")
+            .replace(/(\S)(\|\S+\|)/gi, "$1+$2")
+            .replace(/(\S-)(\S)/gi, "$1+$2")
+            .split(/\+/g);
+    };
     return VerseText;
 }());
 var SegmentTypeDictionary = {
     "†": exports.VerseSegmentType.Flex,
     "*": exports.VerseSegmentType.Mediant,
-    "\n": exports.VerseSegmentType.Termination,
+    "\n": exports.VerseSegmentType.Termination
 };
 var VerseSegment = /** @class */ (function () {
     function VerseSegment(text, syllabifier, type, additionalWhitespace) {
-        if (syllabifier === void 0) { syllabifier = defaultSyllabifier; }
+        if (syllabifier === void 0) { syllabifier = VerseText.defaultSyllabifier; }
         if (type === void 0) { type = exports.VerseSegmentType.Termination; }
         this.words = VerseSegment.splitIntoWords(text, syllabifier);
         this.syllables = [].concat.apply([], this.words.map(function (word) { return word.syllables; }));
@@ -281,17 +350,22 @@ var VerseSegment = /** @class */ (function () {
      */
     VerseSegment.prototype.getFormattedStrings = function (_a) {
         var _this = this;
-        var _b = _a === void 0 ? {} : _a, _c = _b.accents, accents = _c === void 0 ? 0 : _c, _d = _b.preparatory, preparatory = _d === void 0 ? 0 : _d, _e = _b.onlyMarkFirstPreparatory, onlyMarkFirstPreparatory = _e === void 0 ? false : _e, _f = _b.syllableSeparator, syllableSeparator = _f === void 0 ? "\xAD" : _f;
+        var _b = _a === void 0 ? {} : _a, _c = _b.accents, accents = _c === void 0 ? 0 : _c, _d = _b.preparatory, preparatory = _d === void 0 ? 0 : _d, _e = _b.onlyMarkFirstPreparatory, onlyMarkFirstPreparatory = _e === void 0 ? false : _e, _f = _b.syllableSeparator, syllableSeparator = _f === void 0 ? "\xAD" : _f, _g = _b.includeVerseNumbers, includeVerseNumbers = _g === void 0 ? false : _g;
         var markedAccents = this.accentedSyllables.slice(this.accentedSyllables.length - accents);
         var firstAccentIndex = markedAccents.length
             ? markedAccents[0].indexInSegment || 0
             : this.syllables.length;
         var firstMarkedPreparatoryIndex = Math.max(0, firstAccentIndex - preparatory);
         var result = [];
+        var prefix = (includeVerseNumbers &&
+            this.words[0].verseNumber &&
+            this.words[0].verseNumber + " ") ||
+            "";
         var workingString = {
-            text: this.syllables
-                .slice(0, firstMarkedPreparatoryIndex)
-                .join(syllableSeparator),
+            text: prefix +
+                this.syllables
+                    .slice(0, firstMarkedPreparatoryIndex)
+                    .join(syllableSeparator)
         };
         var nextSyllableIndex = firstMarkedPreparatoryIndex;
         var lastItalicIndex = onlyMarkFirstPreparatory
@@ -309,13 +383,13 @@ var VerseSegment = /** @class */ (function () {
                     style: "italic",
                     text: italics[0].withoutPreText() +
                         italics.slice(1, -1).join("") +
-                        lastItalic.withoutPostText(),
+                        lastItalic.withoutPostText()
                 };
             }
             else {
                 workingString = {
                     style: "italic",
-                    text: italics[0].text,
+                    text: italics[0].text
                 };
             }
             result.push(workingString);
@@ -352,13 +426,18 @@ var VerseSegment = /** @class */ (function () {
      * @param  {GabcPsalmTone} psalmTone definition for the psalm tone GABC
      * @return {string}           GABC string
      */
-    VerseSegment.prototype.withGabc = function (psalmTone, useIntonation, useFlex, stripFlexMediantSymbols, useLargeInitial) {
+    VerseSegment.prototype.withGabc = function (psalmTone, useIntonation, useFlex, stripFlexMediantSymbols, useLargeInitial, minSylsOnRecitingTone) {
+        var _a;
         var _this = this;
         if (useIntonation === void 0) { useIntonation = true; }
         if (useFlex === void 0) { useFlex = false; }
         if (stripFlexMediantSymbols === void 0) { stripFlexMediantSymbols = true; }
         if (useLargeInitial === void 0) { useLargeInitial = false; }
-        var syllables = this.syllables.slice(), _a = psalmTone.gabc, intonation = _a.intonation, preparatory = _a.preparatory, accents = _a.accents, afterLastAccent = _a.afterLastAccent, tenor = _a.tenor, flex = _a.flex, result = "";
+        if (minSylsOnRecitingTone === void 0) { minSylsOnRecitingTone = 2; }
+        if (this.syllables.length === 0) {
+            return "";
+        }
+        var syllables = this.syllables.slice(), _b = psalmTone.gabc, intonation = _b.intonation, preparatory = _b.preparatory, accents = _b.accents, afterLastAccent = _b.afterLastAccent, tenor = _b.tenor, flex = _b.flex, result = "";
         if (useLargeInitial && !syllables[0].preText) {
             syllables = syllables.slice();
             var firstSyllable = syllables[0];
@@ -367,22 +446,23 @@ var VerseSegment = /** @class */ (function () {
                 firstSyllable.text = firstSyllable.text.toUpperCase();
             }
             else {
-                firstSyllable.text = firstSyllable.text.slice(0, 2).toUpperCase() + firstSyllable.text.slice(2).toLowerCase();
+                firstSyllable.text =
+                    firstSyllable.text.slice(0, 2).toUpperCase() +
+                        firstSyllable.text.slice(2).toLowerCase();
             }
         }
         if (useFlex) {
-            afterLastAccent = [{ gabc: flex || "" }];
-            accents = [
-                [
-                    { accent: true, gabc: tenor || "" },
-                    { open: true, gabc: flex || "" },
-                ],
-            ];
-            preparatory = [];
+            (_a = psalmTone.getFlexTone("en"), afterLastAccent = _a.afterLastAccent, preparatory = _a.preparatory, accents = _a.accents);
         }
         var firstInterestingAccent = this.accentedSyllables[psalmTone.gabc.accents.length - 1], indexOfFirstInterestingAccent = firstInterestingAccent
             ? firstInterestingAccent.indexInSegment || 0
             : syllables.length, indexOfFirstPreparatory = indexOfFirstInterestingAccent - preparatory.length, syllablesBeforePreparatory = syllables.slice(0, indexOfFirstPreparatory), preparatorySyllables = syllables.slice(indexOfFirstPreparatory, indexOfFirstPreparatory + preparatory.length), accentedSyllableAndAfter = syllables.slice(indexOfFirstPreparatory + preparatory.length);
+        if (useIntonation) {
+            var syllablesOnRecitingTone = syllablesBeforePreparatory.length - intonation.length;
+            if (syllablesOnRecitingTone < minSylsOnRecitingTone) {
+                useIntonation = false;
+            }
+        }
         // prepare GABC of intonation (if any)
         if (!useIntonation)
             intonation = [];
@@ -448,7 +528,8 @@ var VerseSegment = /** @class */ (function () {
         if (remainingSyllables.length === afterLastAccent.length) {
             remainingSyllables.forEach(function (syl, i) { return (result += syl.withGabc(afterLastAccent[i].gabc)); });
         }
-        else if (this.accentedSyllables.length && (remainingSyllables.length || afterLastAccent.length > 1)) {
+        else if (this.accentedSyllables.length &&
+            (remainingSyllables.length || afterLastAccent.length > 1)) {
             // only bother warning if there are actually marked accents in the text
             // and there are remaining syllables, or more than one syllable after the accent in the psalm tone
             console.warn("Invalid state when applying psalm tone...incorrect number of syllables remaining");
@@ -461,10 +542,10 @@ var VerseSegment = /** @class */ (function () {
         return this.words.join(" ");
     };
     VerseSegment.splitIntoWords = function (text, syllabifier) {
-        if (syllabifier === void 0) { syllabifier = defaultSyllabifier; }
+        if (syllabifier === void 0) { syllabifier = VerseText.defaultSyllabifier; }
         var wordSplit = text
             .trim()
-            .split(/([,;:.!?"'’”»\]\)—–-]*)(?:$|\s+|^)(?:\[?(\d+(?:[a-l]\b)?)\.?\]?\s*)?([\(\[«“‘'"¿¡—–-]*)/);
+            .split(/([,;:.!?"'’”»\]\)—–-]*)(?:$|\s+|^)(?:\[?((?:\d+:\s*)?\d+(?:[a-l]\b)?)\.?\]?\s*)?([\(\[«“‘'"¿¡—–-]*)/);
         // the text is now split into an array composed of text that didn't match
         // the regex, followed by the first group of the regex, and the second
         // group, and repeating.  We add two empty strings to the beginning and end
@@ -503,7 +584,7 @@ var VerseSegment = /** @class */ (function () {
 var VerseWord = /** @class */ (function () {
     function VerseWord(text, pre, post, syllabifier, verseNumber) {
         var _this = this;
-        if (syllabifier === void 0) { syllabifier = defaultSyllabifier; }
+        if (syllabifier === void 0) { syllabifier = VerseText.defaultSyllabifier; }
         if (verseNumber)
             this.verseNumber = verseNumber;
         this.isActualWord = /[a-z]/i.test(text);
@@ -690,6 +771,38 @@ var GabcPsalmTone = /** @class */ (function () {
             afterLastAccent: afterLastAccent.length
         };
     }
+    GabcPsalmTone.prototype.getFlexTone = function (language) {
+        var _a = this.gabc, tenor = _a.tenor, flex = _a.flex;
+        var tenorFlexDrop = parseInt(tenor, 23) - parseInt(flex, 23);
+        var preparatory = [];
+        var afterLastAccent, accents;
+        if (language === "en") {
+            afterLastAccent = [];
+            accents = [
+                [
+                    {
+                        gabc: "",
+                        accent: true,
+                        toneAccentFork: [
+                            [{ gabc: tenorFlexDrop === 1 ? flex : tenor }],
+                            [{ gabc: tenor }, { gabc: flex }],
+                            [{ gabc: tenor }, { gabc: flex, open: true }]
+                        ]
+                    }
+                ]
+            ];
+        }
+        else {
+            afterLastAccent = [{ gabc: flex || "" }];
+            accents = [
+                [
+                    { accent: true, gabc: tenor || "" },
+                    { open: true, gabc: flex || "" }
+                ]
+            ];
+        }
+        return __assign(__assign({}, this.gabc), { preparatory: preparatory, accents: accents, afterLastAccent: afterLastAccent });
+    };
     /**
      * Takes gabc like `(jr//////////k//j)(:)(jr////////h///i//g)(::)` or
      *                 `jr k j : jr h i g ::
@@ -701,16 +814,21 @@ var GabcPsalmTone = /** @class */ (function () {
      * @return {{mediant: GabcPsalmTone, termination: GabcPsalmTone}}      object hash with mediant and termination
      */
     GabcPsalmTone.getFromGabc = function (gabc, options, clef) {
-        var _a;
+        var _a, _b;
         if (options === void 0) { options = {}; }
         if (!/\|/.test(gabc)) {
             gabc = gabc.replace(/[()]+/g, " ");
         }
+        var useFlex = options.useFlex;
+        if (/(^|\n)%\s*flex\s*\n/.test(gabc)) {
+            useFlex = true;
+        }
+        gabc = gabc.replace(/(^|\n)(%[^\n]*\n)+/g, "$1");
         var originalGabc = gabc;
         var clefMatch = /^[^a-m]*((?:cb?|f)[1-4])/.exec(gabc);
         if (clefMatch) {
             var detectedClef = clefMatch[1];
-            if (clef && clef.slice(0, -1) === detectedClef.slice(0, -1)) {
+            if (clef && clef[0] === detectedClef[0]) {
                 var detectedClefPosition = parseInt(detectedClef.slice(-1)), desiredClefPosition = parseInt(clef.slice(-1)), shift = 2 * (desiredClefPosition - detectedClefPosition);
                 // shift the psalm tone
                 try {
@@ -718,6 +836,26 @@ var GabcPsalmTone = /** @class */ (function () {
                 }
                 catch (exception) {
                     clef = detectedClef;
+                }
+                if (clef.length !== detectedClef.length) {
+                    var newClefHasAccidental = clef.length === 3;
+                    // find pitch of accidental based on clef position:
+                    var accid = String.fromCharCode(desiredClefPosition * 2 + "a".charCodeAt(0));
+                    // can't make a reciting tone to have an accidental, so if that's the case,
+                    // just shift the detected clef, without adding or removing the accidental
+                    if (new RegExp(accid + "r").test(gabc)) {
+                        clef = detectedClef.slice(0, -1) + clef.slice(-1);
+                    }
+                    else if (newClefHasAccidental) {
+                        // remove accidentals from the psalm tone, and add naturals to any pitches that weren't marked with a flat
+                        gabc = gabc.replace(new RegExp("([^xy])" + accid + "([^xy]|$)", "g"), "$1" + accid + "y" + accid + "$2");
+                        gabc = gabc.replace(new RegExp(accid + "x" + accid, "g"), accid);
+                    }
+                    else {
+                        // add accidentals to the psalm tone, since they are no longer in the clef:
+                        gabc = gabc.replace(new RegExp("([^xy])" + accid + "([^xy]|$)", "g"), "$1" + accid + "x" + accid);
+                        gabc = gabc.replace(new RegExp(accid + "y" + accid, "g"), accid);
+                    }
                 }
             }
             else {
@@ -728,15 +866,14 @@ var GabcPsalmTone = /** @class */ (function () {
         else if (!clef) {
             clef = "c4";
         }
-        originalGabc = (clef + " " + gabc.trim()).replace(/\(([^|)]+)[^)]*\)/g, "$1");
+        originalGabc = (clef + " " + gabc.trim())
+            .replace(/\(([^|)]+)[^)]*\)/g, "$1")
+            .replace(/\s+([a-m]x[a-mA-M])/, "/$1");
         gabc = gabc.replace(/\/+/g, " ").replace(/::\s*$/, "");
-        var gabcSegments = gabc.split(" : ");
-        if (gabcSegments.length != 2) {
-            console.warn("GabcPsalmTone.getFromGabc called on invalid GABC:", gabc);
-        }
+        var gabcSegments = gabc.split(/\s+:+\s+/);
         var gabcPsalmTones = gabcSegments.map(function (gabc) {
             gabc = gabc.trim();
-            if (options.treatAsOneAccentWithXPreparatory) {
+            if (options.treatAsOneAccentWithXPreparatory && !/'/.test(gabc)) {
                 var match = gabc.match(/\s(([^\sr',;:()])+)$/);
                 if (match) {
                     // jr h i g => jr h i 'g gr g
@@ -749,18 +886,41 @@ var GabcPsalmTone = /** @class */ (function () {
                             "r " +
                             match[2].toLowerCase();
                 }
-                else {
-                    gabc = gabc.replace(/\s\(([^)]+\|.*)\s([^\sr',;:()])\)$/, " '($1 $2r $2)");
-                }
             }
-            return new GabcPsalmTone(gabc, "", true, clef);
+            gabc = gabc.replace(/\s'?\(([^r|)]+\|[^r]*)\s([^\sr',;:()])\)$/, " '($1 $2r $2)");
+            return new GabcPsalmTone(gabc, "", !useFlex, clef);
         });
-        return _a = {},
+        var isMeinrad = !!options.isMeinrad || gabcPsalmTones.length === 2 + 3 + 4 + 5 + 6;
+        var result = (_a = {},
             _a[exports.VerseSegmentType.Mediant] = gabcPsalmTones[0],
             _a[exports.VerseSegmentType.Termination] = gabcPsalmTones[1],
+            _a.isMeinrad = isMeinrad,
             _a.originalGabc = originalGabc,
             _a.clef = clef,
-            _a;
+            _a);
+        if (isMeinrad) {
+            if (gabcPsalmTones.length != 2 + 3 + 4 + 5 + 6) {
+                console.warn("Incorrect number of psalm tone lines given for Meinrad type psalm tone.  Expected 20, but received " + gabcPsalmTones.length);
+            }
+            var lines = [];
+            for (var i = 0, count = 2; i < gabcPsalmTones.length; i += count++) {
+                lines[count] = gabcPsalmTones.slice(i, i + count);
+            }
+            result.lines = lines;
+        }
+        else {
+            var lines = (result.lines = []);
+            for (var i = 0; i < gabcPsalmTones.length; i += 2) {
+                var psalmTones = (_b = {},
+                    _b[exports.VerseSegmentType.Mediant] = gabcPsalmTones[i],
+                    _b[exports.VerseSegmentType.Termination] = gabcPsalmTones[i + 1],
+                    _b.isMeinrad = false,
+                    _b.clef = clef,
+                    _b);
+                lines.push(psalmTones);
+            }
+        }
+        return result;
     };
     GabcPsalmTone.getTonesForGabcString = function (gabc) {
         var match;
@@ -787,5 +947,4 @@ var GabcPsalmTone = /** @class */ (function () {
 exports.GabcPsalmTone = GabcPsalmTone;
 exports.GabcSyllabified = GabcSyllabified;
 exports.VerseText = VerseText;
-exports.defaultSyllabifier = defaultSyllabifier;
 //# sourceMappingURL=index.js.map

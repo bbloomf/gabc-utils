@@ -1,3 +1,12 @@
+# [2.0.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.3.1...v2.0.0) (2020-07-13)
+
+
+### Features
+
+* **Psalm Tones:** Make GabcPsalmTone capable of handling Meinrad tones and solemn antiphon tones ([cf477af](https://gitlab.com/sourceandsummit/gabc-utils/commit/cf477afab5f10b73df0114230eb37b22cc410b2c))
+
+
+
 ## [1.3.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.3.0...v1.3.1) (2020-07-06)
 
 
