@@ -1,15 +1,21 @@
 import { VerseSegmentType } from "./VerseText";
 import { shiftGabc } from "./shiftGabc";
 
-export type GabcPsalmTones = {
-  [VerseSegmentType.Flex]?: GabcPsalmTone;
-  [VerseSegmentType.Mediant]: GabcPsalmTone;
-  [VerseSegmentType.Termination]: GabcPsalmTone;
-  originalGabc: string;
+export type GabcPsalmTones = GabcPsalmToneChunk & {
+  lines?: (GabcPsalmToneChunk | GabcPsalmTone[])[];
+  isMeinrad: boolean;
+  originalGabc?: string;
   clef: string;
+};
+export type GabcPsalmToneChunk = {
+  [VerseSegmentType.Flex]?: GabcPsalmTone;
+  [VerseSegmentType.Mediant]?: GabcPsalmTone;
+  [VerseSegmentType.Termination]: GabcPsalmTone;
 };
 export type GabcPsalmToneOptions = {
   treatAsOneAccentWithXPreparatory?: boolean;
+  useFlex?: boolean;
+  isMeinrad?: boolean;
 };
 
 type GabcSingleTone = {
@@ -34,6 +40,37 @@ type SyllableCounts = {
 };
 
 export class GabcPsalmTone {
+  getFlexTone(language: string): GabcInfo {
+    const { tenor, flex } = this.gabc;
+    const tenorFlexDrop = parseInt(tenor, 23) - parseInt(flex, 23);
+    const preparatory = [];
+    let afterLastAccent, accents;
+    if (language === "en") {
+      afterLastAccent = [];
+      accents = [
+        [
+          {
+            gabc: "",
+            accent: true,
+            toneAccentFork: [
+              [{ gabc: tenorFlexDrop === 1 ? flex : tenor }],
+              [{ gabc: tenor }, { gabc: flex }],
+              [{ gabc: tenor }, { gabc: flex, open: true }]
+            ]
+          }
+        ]
+      ];
+    } else {
+      afterLastAccent = [{ gabc: flex || "" }];
+      accents = [
+        [
+          { accent: true, gabc: tenor || "" },
+          { open: true, gabc: flex || "" }
+        ]
+      ];
+    }
+    return { ...this.gabc, preparatory, accents, afterLastAccent };
+  }
   /**
    * Takes gabc like `(jr//////////k//j)(:)(jr////////h///i//g)(::)` or
    *                 `jr k j : jr h i g ::
@@ -52,12 +89,17 @@ export class GabcPsalmTone {
     if (!/\|/.test(gabc)) {
       gabc = gabc.replace(/[()]+/g, " ");
     }
+    let { useFlex } = options;
+    if (/(^|\n)%\s*flex\s*\n/.test(gabc)) {
+      useFlex = true;
+    }
+    gabc = gabc.replace(/(^|\n)(%[^\n]*\n)+/g, "$1");
     let originalGabc = gabc;
     let clefMatch = /^[^a-m]*((?:cb?|f)[1-4])/.exec(gabc);
     if (clefMatch) {
       const detectedClef = clefMatch[1],
         desiredClef = clef;
-      if (clef && clef.slice(0, -1) === detectedClef.slice(0, -1)) {
+      if (clef && clef[0] === detectedClef[0]) {
         const detectedClefPosition = parseInt(detectedClef.slice(-1)),
           desiredClefPosition = parseInt(clef.slice(-1)),
           shift = 2 * (desiredClefPosition - detectedClefPosition);
@@ -67,6 +109,32 @@ export class GabcPsalmTone {
         } catch (exception) {
           clef = detectedClef;
         }
+        if (clef.length !== detectedClef.length) {
+          const newClefHasAccidental = clef.length === 3;
+          // find pitch of accidental based on clef position:
+          const accid = String.fromCharCode(
+            desiredClefPosition * 2 + "a".charCodeAt(0)
+          );
+          // can't make a reciting tone to have an accidental, so if that's the case,
+          // just shift the detected clef, without adding or removing the accidental
+          if (new RegExp(`${accid}r`).test(gabc)) {
+            clef = detectedClef.slice(0, -1) + clef.slice(-1);
+          } else if (newClefHasAccidental) {
+            // remove accidentals from the psalm tone, and add naturals to any pitches that weren't marked with a flat
+            gabc = gabc.replace(
+              new RegExp(`([^xy])${accid}([^xy]|$)`, "g"),
+              `$1${accid}y${accid}$2`
+            );
+            gabc = gabc.replace(new RegExp(`${accid}x${accid}`, "g"), accid);
+          } else {
+            // add accidentals to the psalm tone, since they are no longer in the clef:
+            gabc = gabc.replace(
+              new RegExp(`([^xy])${accid}([^xy]|$)`, "g"),
+              `$1${accid}x${accid}`
+            );
+            gabc = gabc.replace(new RegExp(`${accid}y${accid}`, "g"), accid);
+          }
+        }
       } else {
         clef = detectedClef;
       }
@@ -74,16 +142,15 @@ export class GabcPsalmTone {
     } else if (!clef) {
       clef = "c4";
     }
-    originalGabc = (clef + " " + gabc.trim()).replace(/\(([^|)]+)[^)]*\)/g, "$1");
+    originalGabc = (clef + " " + gabc.trim())
+      .replace(/\(([^|)]+)[^)]*\)/g, "$1")
+      .replace(/\s+([a-m]x[a-mA-M])/, "/$1");
     gabc = gabc.replace(/\/+/g, " ").replace(/::\s*$/, "");
-    let gabcSegments = gabc.split(" : ");
-    if (gabcSegments.length != 2) {
-      console.warn("GabcPsalmTone.getFromGabc called on invalid GABC:", gabc);
-    }
+    let gabcSegments = gabc.split(/\s+:+\s+/);
 
     let gabcPsalmTones = gabcSegments.map((gabc) => {
       gabc = gabc.trim();
-      if (options.treatAsOneAccentWithXPreparatory) {
+      if (options.treatAsOneAccentWithXPreparatory && !/'/.test(gabc)) {
         let match = gabc.match(/\s(([^\sr',;:()])+)$/);
         if (match) {
           // jr h i g => jr h i 'g gr g
@@ -95,18 +162,47 @@ export class GabcPsalmTone {
             match[2].toLowerCase() +
             "r " +
             match[2].toLowerCase();
-        } else {
-          gabc = gabc.replace(/\s\(([^)]+\|.*)\s([^\sr',;:()])\)$/, " '($1 $2r $2)");
         }
       }
-      return new GabcPsalmTone(gabc, "", true, clef);
+      gabc = gabc.replace(
+        /\s'?\(([^r|)]+\|[^r]*)\s([^\sr',;:()])\)$/,
+        " '($1 $2r $2)"
+      );
+      return new GabcPsalmTone(gabc, "", !useFlex, clef);
     });
-    return {
+    const isMeinrad =
+      !!options.isMeinrad || gabcPsalmTones.length === 2 + 3 + 4 + 5 + 6;
+    const result: GabcPsalmTones = {
       [VerseSegmentType.Mediant]: gabcPsalmTones[0],
       [VerseSegmentType.Termination]: gabcPsalmTones[1],
+      isMeinrad,
       originalGabc,
       clef
     };
+    if (isMeinrad) {
+      if (gabcPsalmTones.length != 2 + 3 + 4 + 5 + 6) {
+        console.warn(
+          `Incorrect number of psalm tone lines given for Meinrad type psalm tone.  Expected 20, but received ${gabcPsalmTones.length}`
+        );
+      }
+      const lines = [];
+      for (let i = 0, count = 2; i < gabcPsalmTones.length; i += count++) {
+        lines[count] = gabcPsalmTones.slice(i, i + count);
+      }
+      result.lines = lines;
+    } else {
+      const lines = (result.lines = []);
+      for (let i = 0; i < gabcPsalmTones.length; i += 2) {
+        const psalmTones: GabcPsalmTones = {
+          [VerseSegmentType.Mediant]: gabcPsalmTones[i],
+          [VerseSegmentType.Termination]: gabcPsalmTones[i + 1],
+          isMeinrad: false,
+          clef
+        };
+        lines.push(psalmTones);
+      }
+    }
+    return result;
   }
 
   tones: GabcSingleTone[];
@@ -189,7 +285,8 @@ export class GabcPsalmTone {
           // intonation syllable, but we won't consider it as such if has the
           // same GABC code as the the tenor (or if we have already gotten the
           // last syllable of the intonation)
-          if (intonation.length > 0 || ton.gabc != lastOpen.gabc) intonation.unshift(ton);
+          if (intonation.length > 0 || ton.gabc != lastOpen.gabc)
+            intonation.unshift(ton);
           continue;
         }
         lastOpen = undefined;
