@@ -10,6 +10,5 @@ export {
   Syllabifier,
   FormattedString,
   VerseSegmentType,
-  defaultSyllabifier,
   VerseText,
 } from './lib/VerseText';
