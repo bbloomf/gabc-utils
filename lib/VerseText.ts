@@ -398,8 +398,14 @@ class VerseSegment {
         ? firstInterestingAccent.indexInSegment || 0
         : syllables.length,
       indexOfFirstPreparatory =
-        indexOfFirstInterestingAccent - preparatory.length,
-      syllablesBeforePreparatory = syllables.slice(0, indexOfFirstPreparatory),
+        indexOfFirstInterestingAccent - preparatory.length;
+      if (indexOfFirstPreparatory < 0) {
+        // there are not enough syllables to cover all the preparatory tones,
+        // so we cut off any unneeded tones from the beginning of the array:
+        preparatory = preparatory.slice(-indexOfFirstPreparatory);
+        indexOfFirstPreparatory = 0;
+      }
+    let syllablesBeforePreparatory = syllables.slice(0, indexOfFirstPreparatory),
       preparatorySyllables = syllables.slice(
         indexOfFirstPreparatory,
         indexOfFirstPreparatory + preparatory.length
