@@ -1,3 +1,12 @@
+## [2.1.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v2.1.0...v2.1.1) (2020-07-15)
+
+
+### Bug Fixes
+
+* **GabcPsalmTone:** Fix application of psalm tones on short lines that don't contain any reciting tones ([cbbe5c5](https://gitlab.com/sourceandsummit/gabc-utils/commit/cbbe5c5c4f5f7400df76e836885b4d2e25bde153))
+
+
+
 # [2.1.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v2.0.0...v2.1.0) (2020-07-15)
 
 
