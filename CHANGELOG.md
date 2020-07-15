@@ -1,3 +1,12 @@
+# [2.1.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v2.0.0...v2.1.0) (2020-07-15)
+
+
+### Features
+
+* **VerseText:** Allow string value for initial verse number ([184c64d](https://gitlab.com/sourceandsummit/gabc-utils/commit/184c64d89275a45f26ec936d6d68e3cda9153c98))
+
+
+
 # [2.0.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v1.3.1...v2.0.0) (2020-07-13)
 
 

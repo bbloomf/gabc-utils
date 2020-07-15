@@ -213,7 +213,7 @@ var VerseText = /** @class */ (function () {
                 nextSequentialVerseNumber = 0;
                 return result;
             }
-            return nextSequentialVerseNumber
+            return (nextSequentialVerseNumber && typeof nextSequentialVerseNumber === "number")
                 ? nextSequentialVerseNumber++ + ". "
                 : "";
         };

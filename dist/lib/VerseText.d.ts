@@ -27,7 +27,7 @@ export declare class VerseText {
         startVersesOnNewLine?: boolean;
         stripFlexMediantSymbols?: boolean;
         addSequentialVerseNumbersStartingAt?: number;
-        addInitialVerseNumber?: number;
+        addInitialVerseNumber?: number | string;
         minSylsOnRecitingTone?: number;
         useLargeInitial?: boolean;
         barDictionary?: {
