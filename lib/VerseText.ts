@@ -56,7 +56,7 @@ export class VerseText {
       startVersesOnNewLine?: boolean;
       stripFlexMediantSymbols?: boolean;
       addSequentialVerseNumbersStartingAt?: number;
-      addInitialVerseNumber?: number;
+      addInitialVerseNumber?: number | string;
       minSylsOnRecitingTone?: number;
       useLargeInitial?: boolean;
       barDictionary?: { [k in VerseSegmentType]: string };
@@ -70,7 +70,7 @@ export class VerseText {
       stripFlexMediantSymbols = true;
       barDictionary[VerseSegmentType.Flex] = ";";
     }
-    let nextSequentialVerseNumber = addSequentialVerseNumbersStartingAt;
+    let nextSequentialVerseNumber : number | string = addSequentialVerseNumbersStartingAt;
     if (addInitialVerseNumber !== undefined) {
       nextSequentialVerseNumber = addInitialVerseNumber;
     } else {
@@ -86,7 +86,7 @@ export class VerseText {
         nextSequentialVerseNumber = 0;
         return result;
       }
-      return nextSequentialVerseNumber
+      return (nextSequentialVerseNumber && typeof nextSequentialVerseNumber === "number")
         ? `${nextSequentialVerseNumber++}. `
         : "";
     };
