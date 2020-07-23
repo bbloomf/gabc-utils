@@ -172,8 +172,17 @@ var VerseText = /** @class */ (function () {
      * @param text the text to be split into segments
      * @param syllabifier a function that takes a word string and returns an array of its syllables
      */
-    function VerseText(text, syllabifier) {
+    function VerseText(text, isEaster, syllabifier) {
+        if (isEaster === void 0) { isEaster = false; }
         if (syllabifier === void 0) { syllabifier = VerseText.defaultSyllabifier; }
+        if (isEaster) {
+            text = text.replace(/([,;:.!?])?\s*\(E\.\s*T\.\s*([^)]+)\)/g, function (whole, punctuation, alleluia) {
+                return (punctuation || ',') + " " + alleluia;
+            });
+        }
+        else {
+            text = text.replace(/\s*\(E\.\s*T\.[^)]+\)/g, '');
+        }
         this.segments = VerseText.splitIntoSegments(text, syllabifier);
     }
     /**

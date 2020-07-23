@@ -1,3 +1,12 @@
+# [2.2.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v2.1.2...v2.2.0) (2020-07-23)
+
+
+### Features
+
+* **VerseText:** Allow removal of (E.T. alleluia)s from VerseText based on a parameter added to the constructor ([d5609b4](https://gitlab.com/sourceandsummit/gabc-utils/commit/d5609b43a7ec7be4bc41881b0322a6819824dbde))
+
+
+
 ## [2.1.2](https://gitlab.com/sourceandsummit/gabc-utils/compare/v2.1.1...v2.1.2) (2020-07-23)
 
 
