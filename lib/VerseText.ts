@@ -28,8 +28,16 @@ export class VerseText {
    */
   constructor(
     text: string,
+    isEaster: boolean = false,
     syllabifier: Syllabifier = VerseText.defaultSyllabifier
   ) {
+    if (isEaster) {
+      text = text.replace(/([,;:.!?])?\s*\(E\.\s*T\.\s*([^)]+)\)/g, (whole,punctuation,alleluia) => {
+        return `${(punctuation || ',')} ${alleluia}`;
+      });
+    } else {
+      text = text.replace(/\s*\(E\.\s*T\.[^)]+\)/g,'');
+    }
     this.segments = VerseText.splitIntoSegments(text, syllabifier);
   }
 
