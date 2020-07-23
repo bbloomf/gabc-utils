@@ -115,12 +115,13 @@ var GabcSyllabified = /** @class */ (function () {
         return { syllable: syllable, nextIndex: sylNdx, isFirstSyllable: isFirstSyllable };
     };
     GabcSyllabified.capitalizeInitial = function (syllable, nextSyllable) {
-        if (/^\s*[a-záéíóúýàèìòùäëïöüÿæœǽœ́]+/i.test(syllable)) {
+        var syllableMatch = /^\s*([a-záéíóúýàèìòùäëïöüÿæœǽœ́]+)/i.exec(syllable);
+        if (syllableMatch) {
             // special capitalization rules for the large initial:
             // the second letter should also be capitalized, and the third as well,
             // if it is a three letter word
             syllable = syllable.slice(0, 2).toUpperCase() + syllable.slice(2).toLowerCase();
-            if (syllable.length === 3 && /^\s/.test(nextSyllable)) {
+            if (syllableMatch[1].length === 3 && /^\s/.test(nextSyllable)) {
                 syllable = syllable.toUpperCase();
             }
         }

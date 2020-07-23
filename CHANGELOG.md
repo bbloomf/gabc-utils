@@ -1,3 +1,12 @@
+## [2.1.2](https://gitlab.com/sourceandsummit/gabc-utils/compare/v2.1.1...v2.1.2) (2020-07-23)
+
+
+### Bug Fixes
+
+* **GabcSyllabified:** Only count letters when determining whether to capitalize the first 2 letters or 3 based on whether the first word is only 3 letters ([7d0ed66](https://gitlab.com/sourceandsummit/gabc-utils/commit/7d0ed66a977cc38084612c075fbe21c905c12d08))
+
+
+
 ## [2.1.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v2.1.0...v2.1.1) (2020-07-15)
 
 
