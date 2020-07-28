@@ -1,3 +1,7 @@
+## [2.2.3](https://gitlab.com/sourceandsummit/gabc-utils/compare/v2.2.2...v2.2.3) (2020-07-28)
+
+
+
 ## [2.2.2](https://gitlab.com/sourceandsummit/gabc-utils/compare/v2.2.1...v2.2.2) (2020-07-28)
 
 

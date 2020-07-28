@@ -971,5 +971,6 @@ var GabcPsalmTone = /** @class */ (function () {
 
 exports.GabcPsalmTone = GabcPsalmTone;
 exports.GabcSyllabified = GabcSyllabified;
+exports.VerseSegment = VerseSegment;
 exports.VerseText = VerseText;
 //# sourceMappingURL=index.js.map
