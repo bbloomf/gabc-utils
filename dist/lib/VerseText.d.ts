@@ -43,7 +43,7 @@ export declare class VerseText {
      */
     static splitIntoSegments(text: string, syllabifier?: Syllabifier): VerseSegment[];
 }
-declare class VerseSegment {
+export declare class VerseSegment {
     words: VerseWord[];
     syllables: VerseSyllable[];
     segmentType: VerseSegmentType;
