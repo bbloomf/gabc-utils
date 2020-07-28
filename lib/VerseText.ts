@@ -423,8 +423,18 @@ class VerseSegment {
       );
 
     if (useIntonation) {
-      const syllablesOnRecitingTone =
+      let syllablesOnRecitingTone =
         syllablesBeforePreparatory.length - intonation.length;
+      if (
+        useFlex &&
+        afterLastAccent.length === 0 &&
+        accents.length === 1 &&
+        accents[0].length === 1 &&
+        accents[0][0].toneAccentFork &&
+        accents[0][0].toneAccentFork[0][0].gabc === tenor
+      ) {
+        ++syllablesOnRecitingTone;
+      }
       if (syllablesOnRecitingTone < minSylsOnRecitingTone) {
         useIntonation = false;
       }
