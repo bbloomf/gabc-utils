@@ -1,3 +1,12 @@
+## [2.2.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v2.2.0...v2.2.1) (2020-07-28)
+
+
+### Bug Fixes
+
+* **VerseText:** Count the final accent as a reciting tone when applying a flex that doesn't move down on final accent ([44e2894](https://gitlab.com/sourceandsummit/gabc-utils/commit/44e28940bc597332b874b759758b4c591ea15edd))
+
+
+
 # [2.2.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v2.1.2...v2.2.0) (2020-07-23)
 
 

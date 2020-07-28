@@ -476,6 +476,14 @@ var VerseSegment = /** @class */ (function () {
         var syllablesBeforePreparatory = syllables.slice(0, indexOfFirstPreparatory), preparatorySyllables = syllables.slice(indexOfFirstPreparatory, indexOfFirstPreparatory + preparatory.length), accentedSyllableAndAfter = syllables.slice(indexOfFirstPreparatory + preparatory.length);
         if (useIntonation) {
             var syllablesOnRecitingTone = syllablesBeforePreparatory.length - intonation.length;
+            if (useFlex &&
+                afterLastAccent.length === 0 &&
+                accents.length === 1 &&
+                accents[0].length === 1 &&
+                accents[0][0].toneAccentFork &&
+                accents[0][0].toneAccentFork[0][0].gabc === tenor) {
+                ++syllablesOnRecitingTone;
+            }
             if (syllablesOnRecitingTone < minSylsOnRecitingTone) {
                 useIntonation = false;
             }
