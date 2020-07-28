@@ -217,7 +217,7 @@ const SegmentTypeDictionary = {
   "*": VerseSegmentType.Mediant,
   "\n": VerseSegmentType.Termination
 };
-class VerseSegment {
+export class VerseSegment {
   words: VerseWord[];
   syllables: VerseSyllable[];
   segmentType: VerseSegmentType;
