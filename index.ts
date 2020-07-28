@@ -11,4 +11,5 @@ export {
   FormattedString,
   VerseSegmentType,
   VerseText,
+  VerseSegment,
 } from './lib/VerseText';
