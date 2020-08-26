@@ -1,3 +1,12 @@
+## [2.3.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v2.3.0...v2.3.1) (2020-08-26)
+
+
+### Bug Fixes
+
+* Don't force undertie to center around entire syllables ([65ba0a9](https://gitlab.com/sourceandsummit/gabc-utils/commit/65ba0a922259e26f1eb3714cf8ff950778557cb3))
+
+
+
 # [2.3.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v2.2.3...v2.3.0) (2020-08-26)
 
 
