@@ -45,7 +45,7 @@ export class GabcSyllabified {
 
     text = text.replace(/\xad/g, "")
       .replace(/\xa0/g, " ")
-      .replace(/(^|\s)([^{}\s]+[~‿][^{}\s]+)(?=$|\s)/g,'$1{$2}')
+      .replace(/(^|\s)([^{}\s]+~[^{}\s]+)(?=$|\s)/g,'$1{$2}')
       .replace(
         /([^,.;:\s])\s+\((E|T)\.\s*(T|P)\.\s*(a|A)([^)]+)\)([,.;:]*)/,
         "$1$6 (<i>$2.$3.</i>) A$5$6"
