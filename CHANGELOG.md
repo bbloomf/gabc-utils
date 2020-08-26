@@ -1,3 +1,12 @@
+# [2.3.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v2.2.3...v2.3.0) (2020-08-26)
+
+
+### Features
+
+* **GabcSyllabified:** Handle centering of lyrics with elisions properly ([2a5b1b2](https://gitlab.com/sourceandsummit/gabc-utils/commit/2a5b1b2f1b8de1da352e321ca472c3f188ffc964))
+
+
+
 ## [2.2.3](https://gitlab.com/sourceandsummit/gabc-utils/compare/v2.2.2...v2.2.3) (2020-07-28)
 
 
