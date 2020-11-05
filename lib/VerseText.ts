@@ -536,7 +536,7 @@ export class VerseSegment {
     let wordSplit = text
       .trim()
       .split(
-        /([,;:.!?"'’”»\]\)—–-]*)(?:$|\s+|^)(?:\[?((?:\d+:\s*)?\d+(?:[a-l]\b)?)\.?\]?\s*)?([\(\[«“‘'"¿¡—–-]*)/
+        /([ ,;:.!?"'’”»\]\)—–-]*)(?:$|\s+|^)(?:\[?((?:\d+:\s*)?\d+(?:[a-l]\b)?)\.?\]?\s*)?([\(\[«“‘'"¿¡—–-]*)/
       );
     // the text is now split into an array composed of text that didn't match
     // the regex, followed by the first group of the regex, and the second
