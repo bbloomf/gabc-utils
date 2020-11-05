@@ -1,3 +1,12 @@
+## [2.3.2](https://gitlab.com/sourceandsummit/gabc-utils/compare/v2.3.1...v2.3.2) (2020-11-05)
+
+
+### Bug Fixes
+
+* allow non-breaking space character as part of the punctuation following a word ([5ca68bc](https://gitlab.com/sourceandsummit/gabc-utils/commit/5ca68bc2ea02a4f526c293dfa4b05ae9dc77955d))
+
+
+
 ## [2.3.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v2.3.0...v2.3.1) (2020-08-26)
 
 

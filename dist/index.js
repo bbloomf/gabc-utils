@@ -571,7 +571,7 @@ var VerseSegment = /** @class */ (function () {
         if (syllabifier === void 0) { syllabifier = VerseText.defaultSyllabifier; }
         var wordSplit = text
             .trim()
-            .split(/([,;:.!?"'’”»\]\)—–-]*)(?:$|\s+|^)(?:\[?((?:\d+:\s*)?\d+(?:[a-l]\b)?)\.?\]?\s*)?([\(\[«“‘'"¿¡—–-]*)/);
+            .split(/([ ,;:.!?"'’”»\]\)—–-]*)(?:$|\s+|^)(?:\[?((?:\d+:\s*)?\d+(?:[a-l]\b)?)\.?\]?\s*)?([\(\[«“‘'"¿¡—–-]*)/);
         // the text is now split into an array composed of text that didn't match
         // the regex, followed by the first group of the regex, and the second
         // group, and repeating.  We add two empty strings to the beginning and end
