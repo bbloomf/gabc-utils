@@ -1,3 +1,12 @@
+# [3.0.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v2.3.2...v3.0.0) (2020-12-22)
+
+
+### Features
+
+* Add isEaster parameter to merge() before useLargeInitial ([90bc8de](https://gitlab.com/sourceandsummit/gabc-utils/commit/90bc8de66a0acaaf37d2b117b2eb97f429aa3b4c))
+
+
+
 ## [2.3.2](https://gitlab.com/sourceandsummit/gabc-utils/compare/v2.3.1...v2.3.2) (2020-11-05)
 
 

@@ -3,9 +3,9 @@ Object.defineProperty(exports, '__esModule', { value: true });
 var GabcSyllabified = /** @class */ (function () {
     function GabcSyllabified() {
     }
-    GabcSyllabified.merge = function (syllabifiedText, musicalNotation, useLargeInitial) {
+    GabcSyllabified.merge = function (syllabifiedText, musicalNotation, isEaster, useLargeInitial) {
         if (useLargeInitial === void 0) { useLargeInitial = true; }
-        var _a = GabcSyllabified.normalizeInputs(syllabifiedText, musicalNotation), text = _a.text, notation = _a.notation;
+        var _a = GabcSyllabified.normalizeInputs(syllabifiedText, musicalNotation, isEaster), text = _a.text, notation = _a.notation;
         if (!notation)
             return text;
         var _b = GabcSyllabified.splitInputs(text, notation), syllables = _b.syllables, notationNodes = _b.notationNodes;
@@ -28,7 +28,7 @@ var GabcSyllabified = /** @class */ (function () {
         return result;
     };
     /*-----  NORMALIZATION FUNCTIONS  -----*/
-    GabcSyllabified.normalizeInputs = function (text, notation) {
+    GabcSyllabified.normalizeInputs = function (text, notation, isEaster) {
         // normalize the text, getting rid of multiple consecutive whitespace,
         // and handling lilypond's \forceHyphen directive
         // remove flex and mediant symbols if accents are marked with pipes:
@@ -37,8 +37,27 @@ var GabcSyllabified = /** @class */ (function () {
         }
         text = text.replace(/\xad/g, "")
             .replace(/\xa0/g, " ")
-            .replace(/(^|\s)([^{}\s]+~[^{}\s]+)(?=$|\s)/g, '$1{$2}')
-            .replace(/([^,.;:\s])\s+\((E|T)\.\s*(T|P)\.\s*(a|A)([^)]+)\)([,.;:]*)/, "$1$6 (<i>$2.$3.</i>) A$5$6").replace(/%[^\n]*(\n|$)/g, '$1')
+            .replace(/(^|\s)([^{}\s]+~[^{}\s]+)(?=$|\s)/g, '$1{$2}');
+        if (typeof isEaster === 'boolean') {
+            var notationMatch = notation.match(/::(\s[^:,`]+::\s*)$/);
+            if (isEaster) {
+                text = text.replace(/([,;:.!?])?\s*\([ET]\.\s*[TP]\.\s*([^)]+)\)/g, function (whole, punctuation, alleluia) {
+                    return (punctuation || ',') + " " + alleluia;
+                });
+                if (notationMatch)
+                    notation = notation.slice(0, notationMatch.index) + ':' + notationMatch[1];
+            }
+            else {
+                text = text.replace(/\s*\([ET]\.\s*[TP]\.[^)]+\)/g, '');
+                if (notationMatch)
+                    notation = notation.slice(0, notationMatch.index) + '::';
+            }
+        }
+        else {
+            text = text.replace(/([^,.;:\s])\s+\((E|T)\.\s*(T|P)\.\s*(a|A)([^)]+)\)([,.;:]*)/, "$1$6 (<i>$2.$3.</i>) A$5$6");
+        }
+        text = text
+            .replace(/%[^\n]*(\n|$)/g, '$1')
             .replace(/\s*\n\s*/g, '\n')
             .replace(/(\s)\s+/g, '$1')
             .replace(/\\forceHyphen\s+(\S+)\s+--\s+/g, '$1-')

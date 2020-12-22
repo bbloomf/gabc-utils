@@ -3,8 +3,8 @@ export declare class GabcSyllabified {
     static readonly regexNonSyllabicGabc: RegExp;
     static readonly regexFindParensWithLeadSpaces: RegExp;
     static readonly regexFindParens: RegExp;
-    static merge(syllabifiedText: string, musicalNotation: string, useLargeInitial?: boolean): string;
-    static normalizeInputs(text: string, notation: string): {
+    static merge(syllabifiedText: string, musicalNotation: string, isEaster?: boolean, useLargeInitial?: boolean): string;
+    static normalizeInputs(text: string, notation: string, isEaster?: boolean): {
         text: string;
         notation: string;
     };
