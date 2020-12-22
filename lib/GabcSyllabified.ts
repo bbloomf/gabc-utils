@@ -47,12 +47,12 @@ export class GabcSyllabified {
       .replace(/\xa0/g, " ")
       .replace(/(^|\s)([^{}\s]+~[^{}\s]+)(?=$|\s)/g,'$1{$2}')
     if (typeof isEaster === 'boolean') {
-      const notationMatch = notation.match(/::(\s[^:,`]+::\s*)$/);
+      const notationMatch = notation.match(/(::|[:;,`])(\s[^:;,`]+::\s*)$/);
       if (isEaster) {
         text = text.replace(/([,;:.!?])?\s*\([ET]\.\s*[TP]\.\s*([^)]+)\)/g, (whole,punctuation,alleluia) => {
           return `${(punctuation || ',')} ${alleluia}`;
         });
-        if (notationMatch) notation = notation.slice(0, notationMatch.index) + ':' + notationMatch[1];
+        if (notationMatch?.[1] === '::') notation = notation.slice(0, notationMatch.index) + ':' + notationMatch[1];
       } else {
         text = text.replace(/\s*\([ET]\.\s*[TP]\.[^)]+\)/g,'');
         if (notationMatch) notation = notation.slice(0, notationMatch.index) + '::';
