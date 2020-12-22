@@ -1,3 +1,12 @@
+## [3.0.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.0.0...v3.0.1) (2020-12-22)
+
+
+### Bug Fixes
+
+* Fix handling of easter time Alleluia when the bar coinciding with the E.T. rubric is not a double bar ([b3a59e6](https://gitlab.com/sourceandsummit/gabc-utils/commit/b3a59e6dd1bee9f03908e786b3dec504030cde0d))
+
+
+
 # [3.0.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v2.3.2...v3.0.0) (2020-12-22)
 
 

@@ -39,12 +39,12 @@ var GabcSyllabified = /** @class */ (function () {
             .replace(/\xa0/g, " ")
             .replace(/(^|\s)([^{}\s]+~[^{}\s]+)(?=$|\s)/g, '$1{$2}');
         if (typeof isEaster === 'boolean') {
-            var notationMatch = notation.match(/::(\s[^:,`]+::\s*)$/);
+            var notationMatch = notation.match(/(::|[:;,`])(\s[^:;,`]+::\s*)$/);
             if (isEaster) {
                 text = text.replace(/([,;:.!?])?\s*\([ET]\.\s*[TP]\.\s*([^)]+)\)/g, function (whole, punctuation, alleluia) {
                     return (punctuation || ',') + " " + alleluia;
                 });
-                if (notationMatch)
+                if ((notationMatch === null || notationMatch === void 0 ? void 0 : notationMatch[1]) === '::')
                     notation = notation.slice(0, notationMatch.index) + ':' + notationMatch[1];
             }
             else {
