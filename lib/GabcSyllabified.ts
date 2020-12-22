@@ -5,9 +5,9 @@ export class GabcSyllabified {
   static readonly regexFindParensWithLeadSpaces = /^(\s*)\((.*)\)$/;
   static readonly regexFindParens = /^\((.*)\)$/;
 
-  static merge(syllabifiedText: string, musicalNotation: string, useLargeInitial: boolean = true) {
+  static merge(syllabifiedText: string, musicalNotation: string, isEaster?: boolean, useLargeInitial: boolean = true) {
 
-    const { text, notation } = GabcSyllabified.normalizeInputs(syllabifiedText, musicalNotation);
+    const { text, notation } = GabcSyllabified.normalizeInputs(syllabifiedText, musicalNotation, isEaster);
 
     if (!notation) return text;
 
@@ -35,7 +35,7 @@ export class GabcSyllabified {
   }
 
   /*-----  NORMALIZATION FUNCTIONS  -----*/
-  static normalizeInputs(text: string, notation: string): { text: string, notation: string } {
+  static normalizeInputs(text: string, notation: string, isEaster?: boolean): { text: string, notation: string } {
     // normalize the text, getting rid of multiple consecutive whitespace,
     // and handling lilypond's \forceHyphen directive
     // remove flex and mediant symbols if accents are marked with pipes:
@@ -46,10 +46,25 @@ export class GabcSyllabified {
     text = text.replace(/\xad/g, "")
       .replace(/\xa0/g, " ")
       .replace(/(^|\s)([^{}\s]+~[^{}\s]+)(?=$|\s)/g,'$1{$2}')
-      .replace(
+    if (typeof isEaster === 'boolean') {
+      const notationMatch = notation.match(/::(\s[^:,`]+::\s*)$/);
+      if (isEaster) {
+        text = text.replace(/([,;:.!?])?\s*\([ET]\.\s*[TP]\.\s*([^)]+)\)/g, (whole,punctuation,alleluia) => {
+          return `${(punctuation || ',')} ${alleluia}`;
+        });
+        if (notationMatch) notation = notation.slice(0, notationMatch.index) + ':' + notationMatch[1];
+      } else {
+        text = text.replace(/\s*\([ET]\.\s*[TP]\.[^)]+\)/g,'');
+        if (notationMatch) notation = notation.slice(0, notationMatch.index) + '::';
+      }
+    } else {
+      text = text.replace(
         /([^,.;:\s])\s+\((E|T)\.\s*(T|P)\.\s*(a|A)([^)]+)\)([,.;:]*)/,
         "$1$6 (<i>$2.$3.</i>) A$5$6"
-      ).replace(/%[^\n]*(\n|$)/g, '$1')
+      );
+    }
+    text = text
+      .replace(/%[^\n]*(\n|$)/g, '$1')
       .replace(/\s*\n\s*/g, '\n')
       .replace(/(\s)\s+/g, '$1')
       .replace(/\\forceHyphen\s+(\S+)\s+--\s+/g, '$1-')
