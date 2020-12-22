@@ -52,7 +52,7 @@ export class GabcSyllabified {
         text = text.replace(/([,;:.!?])?\s*\([ET]\.\s*[TP]\.\s*([^)]+)\)/g, (whole,punctuation,alleluia) => {
           return `${(punctuation || ',')} ${alleluia}`;
         });
-        if (notationMatch?.[1] === '::') notation = notation.slice(0, notationMatch.index) + ':' + notationMatch[1];
+        if (notationMatch?.[1] === '::') notation = notation.slice(0, notationMatch.index) + ':' + notationMatch[2];
       } else {
         text = text.replace(/\s*\([ET]\.\s*[TP]\.[^)]+\)/g,'');
         if (notationMatch) notation = notation.slice(0, notationMatch.index) + '::';
