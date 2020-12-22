@@ -45,7 +45,7 @@ var GabcSyllabified = /** @class */ (function () {
                     return (punctuation || ',') + " " + alleluia;
                 });
                 if ((notationMatch === null || notationMatch === void 0 ? void 0 : notationMatch[1]) === '::')
-                    notation = notation.slice(0, notationMatch.index) + ':' + notationMatch[1];
+                    notation = notation.slice(0, notationMatch.index) + ':' + notationMatch[2];
             }
             else {
                 text = text.replace(/\s*\([ET]\.\s*[TP]\.[^)]+\)/g, '');

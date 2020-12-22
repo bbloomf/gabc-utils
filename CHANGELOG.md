@@ -1,3 +1,12 @@
+## [3.0.2](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.0.1...v3.0.2) (2020-12-22)
+
+
+### Bug Fixes
+
+* Fix error in combining GABC with text during easter time ([f72ba6b](https://gitlab.com/sourceandsummit/gabc-utils/commit/f72ba6b5628b594368a368e018ec92a1da55acd6))
+
+
+
 ## [3.0.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.0.0...v3.0.1) (2020-12-22)
 
 
