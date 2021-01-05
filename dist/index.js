@@ -40,17 +40,21 @@ var GabcSyllabified = /** @class */ (function () {
             .replace(/(^|\s)([^{}\s]+~[^{}\s]+)(?=$|\s)/g, '$1{$2}');
         if (typeof isEaster === 'boolean') {
             var notationMatch = notation.match(/(::|[:;,`])(\s[^:;,`]+::\s*)$/);
-            if (isEaster) {
-                text = text.replace(/([,;:.!?])?\s*\([ET]\.\s*[TP]\.\s*([^)]+)\)/g, function (whole, punctuation, alleluia) {
-                    return (punctuation || ',') + " " + alleluia;
-                });
-                if ((notationMatch === null || notationMatch === void 0 ? void 0 : notationMatch[1]) === '::')
-                    notation = notation.slice(0, notationMatch.index) + ':' + notationMatch[2];
-            }
-            else {
-                text = text.replace(/\s*\([ET]\.\s*[TP]\.[^)]+\)/g, '');
-                if (notationMatch)
-                    notation = notation.slice(0, notationMatch.index) + '::';
+            var regexEasterTime = /\s*\([ET]\.\s*[TP]\.[^)]+\)/g;
+            var hasEasterTime = regexEasterTime.test(text);
+            if (hasEasterTime) {
+                if (isEaster) {
+                    text = text.replace(/([,;:.!?])?\s*\([ET]\.\s*[TP]\.\s*([^)]+)\)/g, function (whole, punctuation, alleluia) {
+                        return (punctuation || ',') + " " + alleluia;
+                    });
+                    if ((notationMatch === null || notationMatch === void 0 ? void 0 : notationMatch[1]) === '::')
+                        notation = notation.slice(0, notationMatch.index) + ':' + notationMatch[2];
+                }
+                else {
+                    text = text.replace(regexEasterTime, '');
+                    if (notationMatch)
+                        notation = notation.slice(0, notationMatch.index) + '::';
+                }
             }
         }
         else {

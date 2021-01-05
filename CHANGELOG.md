@@ -1,3 +1,12 @@
+## [3.0.3](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.0.2...v3.0.3) (2021-01-05)
+
+
+### Bug Fixes
+
+* **Easter Time directives:** Handle chants properly when they do not have any easter time directive ([bc28fe9](https://gitlab.com/sourceandsummit/gabc-utils/commit/bc28fe980f08bbd02181d2a466b612d763f2551f))
+
+
+
 ## [3.0.2](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.0.1...v3.0.2) (2020-12-22)
 
 
