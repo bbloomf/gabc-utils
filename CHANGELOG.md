@@ -1,3 +1,12 @@
+## [3.0.4](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.0.3...v3.0.4) (2021-01-15)
+
+
+### Bug Fixes
+
+* Remove <poetic> tags and handle <alt> <rubric> and {} directives ([d54f31d](https://gitlab.com/sourceandsummit/gabc-utils/commit/d54f31daf3886c8816a5e1ef7f373018a08d79c1))
+
+
+
 ## [3.0.3](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.0.2...v3.0.3) (2021-01-05)
 
 

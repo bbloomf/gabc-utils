@@ -61,6 +61,11 @@ var GabcSyllabified = /** @class */ (function () {
             text = text.replace(/([^,.;:\s])\s+\((E|T)\.\s*(T|P)\.\s*(a|A)([^)]+)\)([,.;:]*)/, "$1$6 (<i>$2.$3.</i>) A$5$6");
         }
         text = text
+            // remove poetiic tags:
+            .replace(/<\/?poetic>/g, '')
+            // replace rubric tags:
+            .replace(/<rubric>([^<]*)<\/rubric>/g, '<alt><c><i>$1</alt>')
+            .replace(/(\s){([^}]+)}(\s)/g, '$1<alt><c></i>$2</alt>$3')
             .replace(/%[^\n]*(\n|$)/g, '$1')
             .replace(/\s*\n\s*/g, '\n')
             .replace(/(\s)\s+/g, '$1')
@@ -72,9 +77,20 @@ var GabcSyllabified = /** @class */ (function () {
         return { text: text, notation: notation };
     };
     GabcSyllabified.splitInputs = function (text, notation) {
+        var lastSyl;
         var syllables = text
-            .split(/\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*\([^+)]+\))|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
-            .filter(function (syl) { return syl && syl.trim(); });
+            .split(/((?:<alt>[\s\S]*?<\/alt>\s*)+)|\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*\([^+)]+\))|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
+            .filter(function (syl) { return syl === null || syl === void 0 ? void 0 : syl.trim(); })
+            .reduce(function (result, syl) {
+            if (/^<alt>/.test(lastSyl)) {
+                result[result.length - 1] += syl;
+            }
+            else {
+                result.push(syl);
+            }
+            lastSyl = syl;
+            return result;
+        }, []);
         var notationNodes = notation.split(/\s+/);
         return { syllables: syllables, notationNodes: notationNodes };
     };
