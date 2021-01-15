@@ -68,6 +68,13 @@ export class GabcSyllabified {
       );
     }
     text = text
+      // remove poetiic tags:
+      .replace(/<\/?poetic>/g,'')
+
+      // replace rubric tags:
+      .replace(/<rubric>([^<]*)<\/rubric>/g,'<alt><c><i>$1</alt>')
+      .replace(/(\s){([^}]+)}(\s)/g,'$1<alt><c></i>$2</alt>$3')
+
       .replace(/%[^\n]*(\n|$)/g, '$1')
       .replace(/\s*\n\s*/g, '\n')
       .replace(/(\s)\s+/g, '$1')
@@ -85,9 +92,19 @@ export class GabcSyllabified {
 
 
   static splitInputs(text: string, notation: string): { syllables: string[], notationNodes: string[] } {
+    let lastSyl: string;
     const syllables = text
-    .split(/\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*\([^+)]+\))|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
-      .filter(syl => syl && syl.trim())
+      .split(/((?:<alt>[\s\S]*?<\/alt>\s*)+)|\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*\([^+)]+\))|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
+      .filter(syl => syl?.trim())
+      .reduce((result, syl) => {
+        if (/^<alt>/.test(lastSyl)) {
+          result[result.length - 1] += syl;
+        } else {
+          result.push(syl);
+        }
+        lastSyl = syl;
+        return result;
+      }, [] as string[])
     ;
 
     const notationNodes = notation.split(/\s+/);
