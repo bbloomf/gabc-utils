@@ -94,7 +94,7 @@ export class GabcSyllabified {
   static splitInputs(text: string, notation: string): { syllables: string[], notationNodes: string[] } {
     let lastSyl: string;
     const syllables = text
-      .split(/((?:<alt>[\s\S]*?<\/alt>\s*)+)|\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*\([^+)]+\))|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
+      .split(/((?:(?:<alt>[\s\S]*?<\/alt>|<h\d>[\s\S]*?<\/h\d>)\s*)+)|\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*\([^+)]+\))|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
       .filter(syl => syl?.trim())
       .reduce((result, syl) => {
         if (/^<alt>/.test(lastSyl)) {
