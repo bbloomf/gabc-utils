@@ -13,3 +13,8 @@ export {
   VerseText,
   VerseSegment,
 } from './lib/VerseText';
+
+export {
+  GabcWithTitles,
+  splitGabcByTitle,
+} from './lib/GabcWithTitles';
