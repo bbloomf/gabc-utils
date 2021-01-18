@@ -1,3 +1,12 @@
+# [3.2.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.1.0...v3.2.0) (2021-01-18)
+
+
+### Features
+
+* Add function to split GABC by <h2> tag ([1e13fa9](https://gitlab.com/sourceandsummit/gabc-utils/commit/1e13fa9851f02d5f888e874b920f12a2a97a4e7e))
+
+
+
 # [3.1.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.0.7...v3.1.0) (2021-01-18)
 
 
