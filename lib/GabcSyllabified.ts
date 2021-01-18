@@ -97,7 +97,7 @@ export class GabcSyllabified {
       .split(/((?:(?:<alt>[\s\S]*?<\/alt>|<h\d>[\s\S]*?<\/h\d>)\s*)+)|\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*\([^+)]+\))|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
       .filter(syl => syl?.trim())
       .reduce((result, syl) => {
-        if (/^<alt>/.test(lastSyl)) {
+        if (/^<(alt|h\d)>/.test(lastSyl)) {
           result[result.length - 1] += syl;
         } else {
           result.push(syl);
