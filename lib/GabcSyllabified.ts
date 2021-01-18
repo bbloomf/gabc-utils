@@ -141,7 +141,7 @@ export class GabcSyllabified {
     let syllable = syllables[syllableNdx];
 
     const hasAltHTag = /<(alt|h\d)>/.test(syllable);
-    const isVerseMarker = /^(\d+|℣|℟)\.?/.test(syllable);
+    const isVerseMarker = /^\s*(\d+|℣|℟)\.?/.test(syllable);
 
     if(
       GabcSyllabified.isNonSyllableString(syllable) &&
