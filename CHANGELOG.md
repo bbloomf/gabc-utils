@@ -1,3 +1,12 @@
+## [3.2.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.2.0...v3.2.1) (2021-01-18)
+
+
+### Bug Fixes
+
+* add splitByTitles to exports ([75c8cac](https://gitlab.com/sourceandsummit/gabc-utils/commit/75c8cac431e4dd82636482fb7b337429d1947299))
+
+
+
 # [3.2.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.1.0...v3.2.0) (2021-01-18)
 
 

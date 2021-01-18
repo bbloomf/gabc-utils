@@ -1014,8 +1014,44 @@ var GabcPsalmTone = /** @class */ (function () {
     return GabcPsalmTone;
 }());
 
+var regexClef = /\([^)]*([cf]b?[1-4])/g;
+var splitGabcByTitle = function (gabc) {
+    var gabcAndHeaders = gabc.split(/\s*<h2>([\s\S]*?)<\/h2>\s*/);
+    // even indices are GABC; odd indices are <h2> tags.
+    gabc = gabcAndHeaders[0];
+    var result = [{ gabc: gabc }];
+    var _a = getLastClef(gabc), clef = _a.clef, isOnlyClef = _a.isOnlyClef;
+    if (isOnlyClef) {
+        result.pop();
+    }
+    for (var i = 1; i < gabcAndHeaders.length; i += 2) {
+        var subtitle = gabcAndHeaders[i];
+        var gabc_1 = "(" + clef + ")" + gabcAndHeaders[i + 1];
+        (clef = getLastClef(gabc_1).clef);
+        result.push({ gabc: gabc_1, subtitle: subtitle });
+    }
+    return result;
+};
+function getLastClef(gabc) {
+    var matches = gabc.match(regexClef);
+    if (matches) {
+        var gabcWithoutWhitespace = gabc.replace(/\s+/g, "");
+        var lastMatch = matches.pop();
+        regexClef.exec("");
+        var clef = regexClef.exec(lastMatch)[1];
+        return {
+            clef: clef,
+            isOnlyClef: gabcWithoutWhitespace === "(" + clef + ")",
+        };
+    }
+    return {
+        isOnlyClef: false,
+    };
+}
+
 exports.GabcPsalmTone = GabcPsalmTone;
 exports.GabcSyllabified = GabcSyllabified;
 exports.VerseSegment = VerseSegment;
 exports.VerseText = VerseText;
+exports.splitGabcByTitle = splitGabcByTitle;
 //# sourceMappingURL=index.js.map
