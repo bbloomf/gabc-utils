@@ -122,13 +122,13 @@ export class GabcSyllabified {
     return syllable.replace(/^(\s*)"?\((.*?)\)"?$/, '$1$2').replace(/^(\s*)[!(]/, '$1');
   }
   // check whether a syllable text represents a syllable or not,
-  //   It is considered non-syllabif if
+  //   It is considered non-syllable if
   //     * it starts with !
   //     * it contains no letters
   //     * it is surrounded by parentheses
   //     * It starts with a parenthesis and contains only letters and periods, e.g. `(E.T.` or `(T.P.`
   static isNonSyllableString (s: string) {
-    return /^(\s*!|(\s*[^\sa-záéíóúýàèìòùäëïöüÿæœǽœ́][^a-záéíóúýàèìòùäëïöüÿæœǽœ́]*)$|(\s*\((?:.*\)|[A-Z\.]+))$|(\s*"\(.*\)"$))/i.test(s);
+    return /^(?:<(alt|h\d)>.*?<\/\1>\s*)*(\s*!|(\s*[^\sa-záéíóúýàèìòùäëïöüÿæœǽœ́][^a-záéíóúýàèìòùäëïöüÿæœǽœ́]*)$|(\s*\((?:.*\)|[A-Z\.]+))$|(\s*"\(.*\)"$))/i.test(s);
   }
 
 
@@ -137,12 +137,18 @@ export class GabcSyllabified {
     return (syllables[index] || ' ').replace(/\)([^a-z]*)$/i,"$1").replace(/^(\s*)"(.*)"$/, '$1$2');
   }
 
-  static getNonSyllable(syllables: string[], syllableNdx: number, notation?: string): string {
+  static getNonSyllable(syllables: string[], syllableNdx: number, notation?: string, noSyllable?: boolean): string {
     let syllable = syllables[syllableNdx];
+
+    const hasAltHTag = /<(alt|h\d)>/.test(syllable);
+    const isVerseMarker = /^(\d+|℣|℟)\.?/.test(syllable);
 
     if(
       GabcSyllabified.isNonSyllableString(syllable) &&
-      !GabcSyllabified.regexClef.test(notation)
+      !GabcSyllabified.regexClef.test(notation) &&
+      // If there is a GABC notation that does not get a syllable, e.g., a double bar, we need to make sure
+      // that we don't use the text if it has an <h2> tag or an <alt> tag or is a verse marker:
+      (noSyllable !== true || !(hasAltHTag || isVerseMarker))
     ) {
       return GabcSyllabified.stripNonDisplayCharacters(syllable);
     }
@@ -165,7 +171,7 @@ export class GabcSyllabified {
     const noSyllable = GabcSyllabified.regexNonSyllabicGabc.test(notation) || /^\(.*\)$/.test(notation);
     notation = GabcSyllabified.stripParens(notation);
 
-    let nonSyllable = GabcSyllabified.getNonSyllable(syllables, sylNdx, notation);
+    let nonSyllable = GabcSyllabified.getNonSyllable(syllables, sylNdx, notation, noSyllable);
     let syllable = noSyllable ? (nonSyllable || " ") : GabcSyllabified.getSyllable(syllables, sylNdx++);
     if (noSyllable) {
       if(/\S/.test(syllable)) sylNdx++;
