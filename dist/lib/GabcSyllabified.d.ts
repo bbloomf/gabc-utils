@@ -16,7 +16,7 @@ export declare class GabcSyllabified {
     static stripNonDisplayCharacters(syllable: string): string;
     static isNonSyllableString(s: string): boolean;
     static getSyllable(syllables: string[], index: number): string;
-    static getNonSyllable(syllables: string[], syllableNdx: number, notation?: string): string;
+    static getNonSyllable(syllables: string[], syllableNdx: number, notation?: string, noSyllable?: boolean): string;
     static getNonSyllableOrSpace(syllables: string[], syllableNdx: number, notation?: string): string;
     static mapSyllable(notation: string, syllables: string[], sylNdx: number, isFirstSyllable: boolean, useLargeInitial?: boolean): {
         syllable: string;

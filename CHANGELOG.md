@@ -1,3 +1,12 @@
+# [3.1.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.0.7...v3.1.0) (2021-01-18)
+
+
+### Features
+
+* Don't use non-syllable text with non-syllabic GABC in the case of <h2> or <alt> tags or verse markers ([be81a7b](https://gitlab.com/sourceandsummit/gabc-utils/commit/be81a7b7a6bed2d8e19bf6dcc0c32a35f0ff49bb))
+
+
+
 ## [3.0.7](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.0.6...v3.0.7) (2021-01-18)
 
 
