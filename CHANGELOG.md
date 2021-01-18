@@ -1,3 +1,12 @@
+## [3.0.6](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.0.5...v3.0.6) (2021-01-18)
+
+
+### Bug Fixes
+
+* Fix handling of h2 tags ([1d9cb8f](https://gitlab.com/sourceandsummit/gabc-utils/commit/1d9cb8fb9b63b65acb4d884998ff0e4721044da9))
+
+
+
 ## [3.0.5](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.0.4...v3.0.5) (2021-01-18)
 
 

@@ -82,7 +82,7 @@ var GabcSyllabified = /** @class */ (function () {
             .split(/((?:(?:<alt>[\s\S]*?<\/alt>|<h\d>[\s\S]*?<\/h\d>)\s*)+)|\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*\([^+)]+\))|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
             .filter(function (syl) { return syl === null || syl === void 0 ? void 0 : syl.trim(); })
             .reduce(function (result, syl) {
-            if (/^<alt>/.test(lastSyl)) {
+            if (/^<(alt|h\d)>/.test(lastSyl)) {
                 result[result.length - 1] += syl;
             }
             else {
