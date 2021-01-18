@@ -1,3 +1,12 @@
+## [3.0.5](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.0.4...v3.0.5) (2021-01-18)
+
+
+### Bug Fixes
+
+* Handle h2 tags like alt tags—keep them from producing a new syllable ([da19708](https://gitlab.com/sourceandsummit/gabc-utils/commit/da197083bbe25dcaf4402134e9457c88de606581))
+
+
+
 ## [3.0.4](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.0.3...v3.0.4) (2021-01-15)
 
 
