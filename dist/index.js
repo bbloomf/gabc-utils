@@ -117,7 +117,7 @@ var GabcSyllabified = /** @class */ (function () {
     GabcSyllabified.getNonSyllable = function (syllables, syllableNdx, notation, noSyllable) {
         var syllable = syllables[syllableNdx];
         var hasAltHTag = /<(alt|h\d)>/.test(syllable);
-        var isVerseMarker = /^(\d+|℣|℟)\.?/.test(syllable);
+        var isVerseMarker = /^\s*(\d+|℣|℟)\.?/.test(syllable);
         if (GabcSyllabified.isNonSyllableString(syllable) &&
             !GabcSyllabified.regexClef.test(notation) &&
             // If there is a GABC notation that does not get a syllable, e.g., a double bar, we need to make sure

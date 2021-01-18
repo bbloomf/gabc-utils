@@ -1,3 +1,12 @@
+## [3.2.2](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.2.1...v3.2.2) (2021-01-18)
+
+
+### Bug Fixes
+
+* Fix check for verse marker to allow initial whitespace ([1542d3f](https://gitlab.com/sourceandsummit/gabc-utils/commit/1542d3f21e2f01d772849df193c2fe922e4b3f7c))
+
+
+
 ## [3.2.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.2.0...v3.2.1) (2021-01-18)
 
 
