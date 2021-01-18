@@ -1,3 +1,7 @@
+## [3.0.7](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.0.6...v3.0.7) (2021-01-18)
+
+
+
 ## [3.0.6](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.0.5...v3.0.6) (2021-01-18)
 
 
