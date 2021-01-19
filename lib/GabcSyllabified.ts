@@ -94,11 +94,12 @@ export class GabcSyllabified {
   static splitInputs(text: string, notation: string): { syllables: string[], notationNodes: string[] } {
     let lastSyl: string;
     const syllables = text
-      .split(/((?:(?:<alt>[\s\S]*?<\/alt>|<h\d>[\s\S]*?<\/h\d>)\s*)+)|\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*\([^+)]+\))|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
+      .split(/(\s*(?:(?:<alt>[\s\S]*?<\/alt>|<h\d>[\s\S]*?<\/h\d>)\s*)+)|\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*\([^+)]+\))|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
       .filter(syl => syl?.trim())
       .reduce((result, syl) => {
-        if (/^<(alt|h\d)>/.test(lastSyl)) {
+        if (/^\s*<(alt|h\d)>/.test(lastSyl)) {
           result[result.length - 1] += syl;
+
         } else {
           result.push(syl);
         }
@@ -128,7 +129,7 @@ export class GabcSyllabified {
   //     * it is surrounded by parentheses
   //     * It starts with a parenthesis and contains only letters and periods, e.g. `(E.T.` or `(T.P.`
   static isNonSyllableString (s: string) {
-    return /^(?:<(alt|h\d)>.*?<\/\1>\s*)*(\s*!|(\s*[^\sa-záéíóúýàèìòùäëïöüÿæœǽœ́][^a-záéíóúýàèìòùäëïöüÿæœǽœ́]*)$|(\s*\((?:.*\)|[A-Z\.]+))$|(\s*"\(.*\)"$))/i.test(s);
+    return /^(?:\s*<(alt|h\d)>.*?<\/\1>\s*)*(\s*!|(\s*[^\sa-záéíóúýàèìòùäëïöüÿæœǽœ́][^a-záéíóúýàèìòùäëïöüÿæœǽœ́]*)$|(\s*\((?:.*\)|[A-Z\.]+))$|(\s*"\(.*\)"$))/i.test(s);
   }
 
 
