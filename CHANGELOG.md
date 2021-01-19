@@ -1,3 +1,12 @@
+## [3.2.3](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.2.2...v3.2.3) (2021-01-19)
+
+
+### Bug Fixes
+
+* **<alt>:** Fix problem with whitespace surrounding <alt> tags causing improper hyphens to be added ([61c1feb](https://gitlab.com/sourceandsummit/gabc-utils/commit/61c1feb3906ba0887d2c921e2a6696e82e1df4bb))
+
+
+
 ## [3.2.2](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.2.1...v3.2.2) (2021-01-18)
 
 

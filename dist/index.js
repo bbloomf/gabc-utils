@@ -79,10 +79,10 @@ var GabcSyllabified = /** @class */ (function () {
     GabcSyllabified.splitInputs = function (text, notation) {
         var lastSyl;
         var syllables = text
-            .split(/((?:(?:<alt>[\s\S]*?<\/alt>|<h\d>[\s\S]*?<\/h\d>)\s*)+)|\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*\([^+)]+\))|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
+            .split(/(\s*(?:(?:<alt>[\s\S]*?<\/alt>|<h\d>[\s\S]*?<\/h\d>)\s*)+)|\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*\([^+)]+\))|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
             .filter(function (syl) { return syl === null || syl === void 0 ? void 0 : syl.trim(); })
             .reduce(function (result, syl) {
-            if (/^<(alt|h\d)>/.test(lastSyl)) {
+            if (/^\s*<(alt|h\d)>/.test(lastSyl)) {
                 result[result.length - 1] += syl;
             }
             else {
@@ -108,7 +108,7 @@ var GabcSyllabified = /** @class */ (function () {
     //     * it is surrounded by parentheses
     //     * It starts with a parenthesis and contains only letters and periods, e.g. `(E.T.` or `(T.P.`
     GabcSyllabified.isNonSyllableString = function (s) {
-        return /^(?:<(alt|h\d)>.*?<\/\1>\s*)*(\s*!|(\s*[^\sa-záéíóúýàèìòùäëïöüÿæœǽœ́][^a-záéíóúýàèìòùäëïöüÿæœǽœ́]*)$|(\s*\((?:.*\)|[A-Z\.]+))$|(\s*"\(.*\)"$))/i.test(s);
+        return /^(?:\s*<(alt|h\d)>.*?<\/\1>\s*)*(\s*!|(\s*[^\sa-záéíóúýàèìòùäëïöüÿæœǽœ́][^a-záéíóúýàèìòùäëïöüÿæœǽœ́]*)$|(\s*\((?:.*\)|[A-Z\.]+))$|(\s*"\(.*\)"$))/i.test(s);
     };
     /*-----  GETTER FUNCTIONS  -----*/
     GabcSyllabified.getSyllable = function (syllables, index) {
