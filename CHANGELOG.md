@@ -1,3 +1,12 @@
+## [3.2.4](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.2.3...v3.2.4) (2021-01-19)
+
+
+### Bug Fixes
+
+* **<alt>:** Fix an issue with two <alt> tags on the same syllable ([03ec540](https://gitlab.com/sourceandsummit/gabc-utils/commit/03ec540c44222ff0e2e3aedfeef659f802834285))
+
+
+
 ## [3.2.3](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.2.2...v3.2.3) (2021-01-19)
 
 
