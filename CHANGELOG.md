@@ -1,3 +1,12 @@
+## [3.2.5](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.2.4...v3.2.5) (2021-01-20)
+
+
+### Bug Fixes
+
+* Fix handling of verse indicators to be connected to the next syllable ([bc57459](https://gitlab.com/sourceandsummit/gabc-utils/commit/bc57459ded0aafc68e9ddb3538244def853aa222))
+
+
+
 ## [3.2.4](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.2.3...v3.2.4) (2021-01-19)
 
 

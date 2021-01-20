@@ -84,7 +84,7 @@ var GabcSyllabified = /** @class */ (function () {
             .reduce(function (result, syl) {
             // reverse the order when two <alt>s are in a row, and remove whitespace between them:
             syl = syl.replace(/(?:<alt>.*?<\/alt>\s*){2,}/g, function (alts) { return (alts.split(/(<alt>.*?<\/alt>)/).reverse().filter(function (text) { return !!text.trim(); }).join('')); });
-            if (/^\s*<(alt|h\d)>/.test(lastSyl)) {
+            if (/^\s*(<(alt|h\d)>|([℣℟]|\d+)\.?$)/.test(lastSyl)) {
                 result[result.length - 1] += syl;
             }
             else {
