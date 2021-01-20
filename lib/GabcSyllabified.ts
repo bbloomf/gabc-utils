@@ -2,8 +2,8 @@ export class GabcSyllabified {
   /*-----  REGEX DEFS  -----*/
   static readonly regexClef = /^[cf]b?[1-4]$/;
   static readonly regexNonSyllabicGabc = /^([cf]b?[1-4]|[,;:`]+|[a-m]\+|[zZ]0?)+$/;
-  static readonly regexFindParensWithLeadSpaces = /^(\s*)\((.*)\)$/;
-  static readonly regexFindParens = /^\((.*)\)$/;
+  static readonly regexFindParensWithLeadSpaces = /^(\s*)\(([\s\S]*)\)$/;
+  static readonly regexFindParens = /^\(([\s\S]*)\)$/;
 
   static merge(syllabifiedText: string, musicalNotation: string, isEaster?: boolean, useLargeInitial: boolean = true) {
 
@@ -97,12 +97,17 @@ export class GabcSyllabified {
       .split(/(\s*(?:(?:<alt>[\s\S]*?<\/alt>|<h\d>[\s\S]*?<\/h\d>)\s*)+)|\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*\([^+)]+\))|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
       .filter(syl => syl?.trim())
       .reduce((result, syl) => {
-          // reverse the order when two <alt>s are in a row, and remove whitespace between them:
-          syl = syl.replace(/(?:<alt>.*?<\/alt>\s*){2,}/g, (alts) => (
-            alts.split(/(<alt>.*?<\/alt>)/).reverse().filter(text => !!text.trim()).join('')
-          ));
-      
+        // reverse the order when two <alt>s are in a row, and remove whitespace between them:
+        syl = syl.replace(/(?:<alt>.*?<\/alt>\s*){2,}/g, (alts) => (
+          alts.split(/(<alt>.*?<\/alt>)/).reverse().filter(text => !!text.trim()).join('')
+        ));
+        // remove parentheses around verse markers so that they can get concatenated with the next syllable:
+        syl = syl.replace(/^\(((?:[℣℟]|\d+)\.?)\)$/, '$1');
         if (/^\s*(<(alt|h\d)>|([℣℟]|\d+)\.?$)/.test(lastSyl)) {
+          if(syl.startsWith('(') && syl.endsWith(')')) {
+            syl = syl.slice(1);
+            result[result.length - 1] = '(' + result[result.length - 1];
+          }
           result[result.length - 1] += syl;
         } else {
           result.push(syl);
@@ -124,7 +129,7 @@ export class GabcSyllabified {
     ;
   }
   static stripNonDisplayCharacters(syllable: string) {
-    return syllable.replace(/^(\s*)"?\((.*?)\)"?$/, '$1$2').replace(/^(\s*)[!(]/, '$1');
+    return syllable.replace(/^(\s*)"?\(([\s\S]*?)\)"?$/, '$1$2').replace(/^(\s*)[!(]/, '$1');
   }
   // check whether a syllable text represents a syllable or not,
   //   It is considered non-syllable if
@@ -133,7 +138,7 @@ export class GabcSyllabified {
   //     * it is surrounded by parentheses
   //     * It starts with a parenthesis and contains only letters and periods, e.g. `(E.T.` or `(T.P.`
   static isNonSyllableString (s: string) {
-    return /^(?:\s*<(alt|h\d)>.*?<\/\1>\s*)*(\s*!|(\s*[^\sa-záéíóúýàèìòùäëïöüÿæœǽœ́][^a-záéíóúýàèìòùäëïöüÿæœǽœ́]*)$|(\s*\((?:.*\)|[A-Z\.]+))$|(\s*"\(.*\)"$))/i.test(s);
+    return /^(?:\s*<(alt|h\d)>.*?<\/\1>\s*)*(\s*!|(\s*[^\sa-záéíóúýàèìòùäëïöüÿæœǽœ́][^a-záéíóúýàèìòùäëïöüÿæœǽœ́]*)$|(\s*\((?:[\s\S]*\)|[A-Z\.]+))$|(\s*"\([\s\S]*\)"$))/i.test(s);
   }
 
 
