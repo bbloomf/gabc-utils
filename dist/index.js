@@ -84,7 +84,13 @@ var GabcSyllabified = /** @class */ (function () {
             .reduce(function (result, syl) {
             // reverse the order when two <alt>s are in a row, and remove whitespace between them:
             syl = syl.replace(/(?:<alt>.*?<\/alt>\s*){2,}/g, function (alts) { return (alts.split(/(<alt>.*?<\/alt>)/).reverse().filter(function (text) { return !!text.trim(); }).join('')); });
+            // remove parentheses around verse markers so that they can get concatenated with the next syllable:
+            syl = syl.replace(/^\(((?:[℣℟]|\d+)\.?)\)$/, '$1');
             if (/^\s*(<(alt|h\d)>|([℣℟]|\d+)\.?$)/.test(lastSyl)) {
+                if (syl.startsWith('(') && syl.endsWith(')')) {
+                    syl = syl.slice(1);
+                    result[result.length - 1] = '(' + result[result.length - 1];
+                }
                 result[result.length - 1] += syl;
             }
             else {
@@ -101,7 +107,7 @@ var GabcSyllabified = /** @class */ (function () {
         return s.replace(GabcSyllabified.regexFindParensWithLeadSpaces, '$1$2');
     };
     GabcSyllabified.stripNonDisplayCharacters = function (syllable) {
-        return syllable.replace(/^(\s*)"?\((.*?)\)"?$/, '$1$2').replace(/^(\s*)[!(]/, '$1');
+        return syllable.replace(/^(\s*)"?\(([\s\S]*?)\)"?$/, '$1$2').replace(/^(\s*)[!(]/, '$1');
     };
     // check whether a syllable text represents a syllable or not,
     //   It is considered non-syllable if
@@ -110,7 +116,7 @@ var GabcSyllabified = /** @class */ (function () {
     //     * it is surrounded by parentheses
     //     * It starts with a parenthesis and contains only letters and periods, e.g. `(E.T.` or `(T.P.`
     GabcSyllabified.isNonSyllableString = function (s) {
-        return /^(?:\s*<(alt|h\d)>.*?<\/\1>\s*)*(\s*!|(\s*[^\sa-záéíóúýàèìòùäëïöüÿæœǽœ́][^a-záéíóúýàèìòùäëïöüÿæœǽœ́]*)$|(\s*\((?:.*\)|[A-Z\.]+))$|(\s*"\(.*\)"$))/i.test(s);
+        return /^(?:\s*<(alt|h\d)>.*?<\/\1>\s*)*(\s*!|(\s*[^\sa-záéíóúýàèìòùäëïöüÿæœǽœ́][^a-záéíóúýàèìòùäëïöüÿæœǽœ́]*)$|(\s*\((?:[\s\S]*\)|[A-Z\.]+))$|(\s*"\([\s\S]*\)"$))/i.test(s);
     };
     /*-----  GETTER FUNCTIONS  -----*/
     GabcSyllabified.getSyllable = function (syllables, index) {
@@ -177,8 +183,8 @@ var GabcSyllabified = /** @class */ (function () {
     /*-----  REGEX DEFS  -----*/
     GabcSyllabified.regexClef = /^[cf]b?[1-4]$/;
     GabcSyllabified.regexNonSyllabicGabc = /^([cf]b?[1-4]|[,;:`]+|[a-m]\+|[zZ]0?)+$/;
-    GabcSyllabified.regexFindParensWithLeadSpaces = /^(\s*)\((.*)\)$/;
-    GabcSyllabified.regexFindParens = /^\((.*)\)$/;
+    GabcSyllabified.regexFindParensWithLeadSpaces = /^(\s*)\(([\s\S]*)\)$/;
+    GabcSyllabified.regexFindParens = /^\(([\s\S]*)\)$/;
     return GabcSyllabified;
 }());
 

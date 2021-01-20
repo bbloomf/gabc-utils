@@ -1,3 +1,12 @@
+## [3.2.6](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.2.5...v3.2.6) (2021-01-20)
+
+
+### Bug Fixes
+
+* Fix an issue with <alt> tags followed by parenthetic texts ([78cd204](https://gitlab.com/sourceandsummit/gabc-utils/commit/78cd204ca4db69524ea4bea22dbf16b8ddbb623e))
+
+
+
 ## [3.2.5](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.2.4...v3.2.5) (2021-01-20)
 
 
