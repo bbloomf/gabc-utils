@@ -102,7 +102,7 @@ export class GabcSyllabified {
             alts.split(/(<alt>.*?<\/alt>)/).reverse().filter(text => !!text.trim()).join('')
           ));
       
-        if (/^\s*<(alt|h\d)>/.test(lastSyl)) {
+        if (/^\s*(<(alt|h\d)>|([℣℟]|\d+)\.?$)/.test(lastSyl)) {
           result[result.length - 1] += syl;
         } else {
           result.push(syl);
