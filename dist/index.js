@@ -36,8 +36,7 @@ var GabcSyllabified = /** @class */ (function () {
             text = text.replace(/[†*]/g, "");
         }
         text = text.replace(/\xad/g, "")
-            .replace(/\xa0/g, " ")
-            .replace(/(^|\s)([^{}\s]+~[^{}\s]+)(?=$|\s)/g, '$1{$2}');
+            .replace(/\xa0/g, " ");
         if (typeof isEaster === 'boolean') {
             var notationMatch = notation.match(/(::|[:;,`])(\s[^:;,`]+::\s*)$/);
             var regexEasterTime = /\s*\([ET]\.\s*[TP]\.[^)]+\)/g;
@@ -72,6 +71,7 @@ var GabcSyllabified = /** @class */ (function () {
             .replace(/\\forceHyphen\s+(\S+)\s+--\s+/g, '$1-')
             .replace(/\|([^|]+)\|/g, '+$1+')
             .replace(/([ -])\+|\+(\W*(?:[-\s]|$))/g, '$1$2')
+            .replace(/(^|\s)([^{}\s]+~[^{}\s]+)(?=$|\s)/g, '$1{$2}')
             .trim();
         notation = notation.replace(/%[^\n]*(\n|$)/g, '$1').trim();
         return { text: text, notation: notation };

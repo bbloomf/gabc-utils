@@ -1,3 +1,12 @@
+## [3.2.7](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.2.6...v3.2.7) (2021-01-21)
+
+
+### Bug Fixes
+
+* Fix handling of ~ in lyrics ([b6a02c7](https://gitlab.com/sourceandsummit/gabc-utils/commit/b6a02c7778d155022f2bccc32194e4219148accb))
+
+
+
 ## [3.2.6](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.2.5...v3.2.6) (2021-01-20)
 
 
