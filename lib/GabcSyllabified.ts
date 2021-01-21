@@ -44,8 +44,7 @@ export class GabcSyllabified {
     }
 
     text = text.replace(/\xad/g, "")
-      .replace(/\xa0/g, " ")
-      .replace(/(^|\s)([^{}\s]+~[^{}\s]+)(?=$|\s)/g,'$1{$2}')
+      .replace(/\xa0/g, " ");
     if (typeof isEaster === 'boolean') {
       const notationMatch = notation.match(/(::|[:;,`])(\s[^:;,`]+::\s*)$/);
       const regexEasterTime = /\s*\([ET]\.\s*[TP]\.[^)]+\)/g;
@@ -81,6 +80,7 @@ export class GabcSyllabified {
       .replace(/\\forceHyphen\s+(\S+)\s+--\s+/g, '$1-')
       .replace(/\|([^|]+)\|/g, '+$1+')
       .replace(/([ -])\+|\+(\W*(?:[-\s]|$))/g, '$1$2')
+      .replace(/(^|\s)([^{}\s]+~[^{}\s]+)(?=$|\s)/g,'$1{$2}')
       .trim()
     ;
 
