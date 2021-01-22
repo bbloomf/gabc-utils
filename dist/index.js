@@ -64,7 +64,7 @@ var GabcSyllabified = /** @class */ (function () {
             .replace(/<\/?poetic>/g, '')
             // replace rubric tags:
             .replace(/<rubric>([^<]*)<\/rubric>/g, '<alt><c><i>$1</alt>')
-            .replace(/(\s){([^}]+)}(\s)/g, '$1<alt><c></i>$2</alt>$3')
+            .replace(/(\s){([^}]+)}(\s)/g, '$1<alt><c><i>$2</alt>$3')
             .replace(/%[^\n]*(\n|$)/g, '$1')
             .replace(/\s*\n\s*/g, '\n')
             .replace(/(\s)\s+/g, '$1')
