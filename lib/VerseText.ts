@@ -9,7 +9,15 @@ export enum VerseSegmentType {
   Mediant = "mediant",
   Termination = "termination"
 }
-
+export interface VerseGabcOptions {
+  startVersesOnNewLine?: boolean;
+  stripFlexMediantSymbols?: boolean;
+  addSequentialVerseNumbersStartingAt?: number;
+  addInitialVerseNumber?: number | string;
+  minSylsOnRecitingTone?: number;
+  useLargeInitial?: boolean;
+  barDictionary?: { [k in VerseSegmentType]: string };
+};
 export class VerseText {
   static readonly defaultSyllabifier: Syllabifier = (text) =>
     text
@@ -20,6 +28,7 @@ export class VerseText {
       .replace(/(\S-)(\S)/gi, "$1+$2")
       .split(/\+/g);
   segments: VerseSegment[];
+  stanzas: VerseSegment[][];
 
   /**
    *
@@ -38,7 +47,9 @@ export class VerseText {
     } else {
       text = text.replace(/\s*\(E\.\s*T\.[^)]+\)/g,'');
     }
-    this.segments = VerseText.splitIntoSegments(text, syllabifier);
+    const stanzas = text.split(/\n\s*\n/);
+    this.stanzas = stanzas.map(stanza => VerseText.splitIntoSegments(stanza, syllabifier));
+    this.segments = this.stanzas.flat();
   }
 
   /**
@@ -60,20 +71,13 @@ export class VerseText {
         [VerseSegmentType.Mediant]: ";",
         [VerseSegmentType.Termination]: ":"
       }
-    }: {
-      startVersesOnNewLine?: boolean;
-      stripFlexMediantSymbols?: boolean;
-      addSequentialVerseNumbersStartingAt?: number;
-      addInitialVerseNumber?: number | string;
-      minSylsOnRecitingTone?: number;
-      useLargeInitial?: boolean;
-      barDictionary?: { [k in VerseSegmentType]: string };
-    } = {}
+    }: VerseGabcOptions = {}
   ) {
     if (psalmTone.isMeinrad) {
       // some default overrides for meinrad tones, and a check to make sure there are 2-6 segments
-      if (this.segments.length < 2 || this.segments.length > 6) {
-        throw `Cannot use a Meinrad tone with a ${this.segments.length} line text.`;
+      const stanzaLengths = this.stanzas.map(segments => segments.length);
+      if (Math.min(...stanzaLengths) < 2 || Math.max(...stanzaLengths) > 6) {
+        throw `Cannot use a Meinrad tone with a [${stanzaLengths.join(', ')}] line text.`;
       }
       stripFlexMediantSymbols = true;
       barDictionary[VerseSegmentType.Flex] = ";";
@@ -87,7 +91,9 @@ export class VerseText {
     if (nextSequentialVerseNumber <= 0) {
       nextSequentialVerseNumber = 0;
     }
-    const getNextVerseNumberString = () => {
+    const getNextVerseNumberString = (stanzaI) => {
+      const { verseMarker } = this.stanzas[stanzaI]?.[0];
+      if (verseMarker) return verseMarker + ' ';
       if (addInitialVerseNumber) {
         const result = `${nextSequentialVerseNumber}. `;
         addInitialVerseNumber = 0;
@@ -102,19 +108,49 @@ export class VerseText {
       useLargeInitial &&
       !addSequentialVerseNumbersStartingAt &&
       !addInitialVerseNumber;
-    const stanzaCount = this.segments.filter(
+    let verseMarker: string;
+    return `(${psalmTone.clef}) ` + (
+      this.stanzas.map((stanza, i) =>
+        (verseMarker = getNextVerseNumberString(i)) + 
+        this.getStanzaGabc(psalmTone, i, {
+          startVersesOnNewLine,
+          stripFlexMediantSymbols,
+          minSylsOnRecitingTone,
+          useLargeInitial: useLargeInitial && i === 0 && verseMarker === '',
+          barDictionary,
+        })
+      ).join('\n\n')
+    );
+  }
+
+  getStanzaGabc(
+    psalmTone: GabcPsalmTones,
+    i: number,
+    {
+      startVersesOnNewLine = false,
+      stripFlexMediantSymbols = true,
+      minSylsOnRecitingTone = 2,
+      useLargeInitial = true,
+      barDictionary = {
+        [VerseSegmentType.Flex]: ",",
+        [VerseSegmentType.Mediant]: ";",
+        [VerseSegmentType.Termination]: ":"
+      },
+    }: VerseGabcOptions = {}
+  ) {
+    const segments = this.stanzas[i];
+    const stanzaCount = segments.filter(
       (segment) => segment.segmentType === VerseSegmentType.Termination
     ).length;
     let stanzaI = 0;
     return (
-      `(${psalmTone.clef}) ` +
-      this.segments
+      segments
         .map((seg, i, segments) => {
           let useFlex = seg.segmentType === VerseSegmentType.Flex,
             segmentName = useFlex ? VerseSegmentType.Mediant : seg.segmentType,
             tone = psalmTone[segmentName];
           if (psalmTone.isMeinrad) {
-            tone = psalmTone.lines[this.segments.length][i];
+            tone = psalmTone.lines[segments.length][i];
             useFlex = false;
           } else if (psalmTone.lines.length > 1) {
             let toneIndex;
@@ -129,18 +165,12 @@ export class VerseText {
           }
           let gabc = seg.withGabc(
             tone as GabcPsalmTone,
-            i == 0 || i == this.segments.length - 1, // use intonation on first and last segment
+            i == 0 || i == segments.length - 1, // use intonation on first and last segment
             useFlex,
             stripFlexMediantSymbols,
             i === 0 && useLargeInitial,
             minSylsOnRecitingTone
           );
-          if (
-            i === 0 ||
-            segments[i - 1].segmentType === VerseSegmentType.Termination
-          ) {
-            gabc = getNextVerseNumberString() + gabc;
-          }
           let bar: string;
           if (psalmTone.isMeinrad) {
             if (i === 0) {
@@ -223,6 +253,7 @@ export class VerseSegment {
   segmentType: VerseSegmentType;
   accentedSyllables: VerseSyllable[];
   additionalWhitespace: string;
+  verseMarker?: string;
 
   constructor(
     text: string,
@@ -230,6 +261,11 @@ export class VerseSegment {
     type: VerseSegmentType = VerseSegmentType.Termination,
     additionalWhitespace?: string
   ) {
+    const verseMarkerMatch = /^\s*(?:\(([^)]+)\)|((?:\d+|[℣℟])\.?))/.exec(text);
+    if (verseMarkerMatch) {
+      this.verseMarker = verseMarkerMatch[1] || verseMarkerMatch[2];
+      text = text.slice(verseMarkerMatch[0].length);
+    }
     this.words = VerseSegment.splitIntoWords(text, syllabifier);
     this.syllables = [].concat(...this.words.map((word) => word.syllables));
     this.segmentType = type;
