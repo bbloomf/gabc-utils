@@ -236,7 +236,9 @@ var VerseText = /** @class */ (function () {
         else {
             text = text.replace(/\s*\(E\.\s*T\.[^)]+\)/g, '');
         }
-        this.segments = VerseText.splitIntoSegments(text, syllabifier);
+        var stanzas = text.split(/\n\s*\n/);
+        this.stanzas = stanzas.map(function (stanza) { return VerseText.splitIntoSegments(stanza, syllabifier); });
+        this.segments = this.stanzas.flat();
     }
     /**
      * Returns a verse with GABC
@@ -253,8 +255,9 @@ var VerseText = /** @class */ (function () {
             _b) : _j;
         if (psalmTone.isMeinrad) {
             // some default overrides for meinrad tones, and a check to make sure there are 2-6 segments
-            if (this.segments.length < 2 || this.segments.length > 6) {
-                throw "Cannot use a Meinrad tone with a " + this.segments.length + " line text.";
+            var stanzaLengths = this.stanzas.map(function (segments) { return segments.length; });
+            if (Math.min.apply(Math, stanzaLengths) < 2 || Math.max.apply(Math, stanzaLengths) > 6) {
+                throw "Cannot use a Meinrad tone with a [" + stanzaLengths.join(', ') + "] line text.";
             }
             stripFlexMediantSymbols = true;
             barDictionary[exports.VerseSegmentType.Flex] = ";";
@@ -269,7 +272,11 @@ var VerseText = /** @class */ (function () {
         if (nextSequentialVerseNumber <= 0) {
             nextSequentialVerseNumber = 0;
         }
-        var getNextVerseNumberString = function () {
+        var getNextVerseNumberString = function (stanzaI) {
+            var _a;
+            var verseMarker = ((_a = _this.stanzas[stanzaI]) === null || _a === void 0 ? void 0 : _a[0]).verseMarker;
+            if (verseMarker)
+                return verseMarker + ' ';
             if (addInitialVerseNumber) {
                 var result = nextSequentialVerseNumber + ". ";
                 addInitialVerseNumber = 0;
@@ -284,61 +291,76 @@ var VerseText = /** @class */ (function () {
             useLargeInitial &&
                 !addSequentialVerseNumbersStartingAt &&
                 !addInitialVerseNumber;
-        var stanzaCount = this.segments.filter(function (segment) { return segment.segmentType === exports.VerseSegmentType.Termination; }).length;
+        var verseMarker;
+        return "(" + psalmTone.clef + ") " + (this.stanzas.map(function (stanza, i) {
+            return (verseMarker = getNextVerseNumberString(i)) +
+                _this.getStanzaGabc(psalmTone, i, {
+                    startVersesOnNewLine: startVersesOnNewLine,
+                    stripFlexMediantSymbols: stripFlexMediantSymbols,
+                    minSylsOnRecitingTone: minSylsOnRecitingTone,
+                    useLargeInitial: useLargeInitial && i === 0 && verseMarker === '',
+                    barDictionary: barDictionary,
+                });
+        }).join('\n\n'));
+    };
+    VerseText.prototype.getStanzaGabc = function (psalmTone, i, _a) {
+        var _b;
+        var _c = _a === void 0 ? {} : _a, _d = _c.startVersesOnNewLine, startVersesOnNewLine = _d === void 0 ? false : _d, _e = _c.stripFlexMediantSymbols, stripFlexMediantSymbols = _e === void 0 ? true : _e, _f = _c.minSylsOnRecitingTone, minSylsOnRecitingTone = _f === void 0 ? 2 : _f, _g = _c.useLargeInitial, useLargeInitial = _g === void 0 ? true : _g, _h = _c.barDictionary, barDictionary = _h === void 0 ? (_b = {},
+            _b[exports.VerseSegmentType.Flex] = ",",
+            _b[exports.VerseSegmentType.Mediant] = ";",
+            _b[exports.VerseSegmentType.Termination] = ":",
+            _b) : _h;
+        var segments = this.stanzas[i];
+        var stanzaCount = segments.filter(function (segment) { return segment.segmentType === exports.VerseSegmentType.Termination; }).length;
         var stanzaI = 0;
-        return ("(" + psalmTone.clef + ") " +
-            this.segments
-                .map(function (seg, i, segments) {
-                var useFlex = seg.segmentType === exports.VerseSegmentType.Flex, segmentName = useFlex ? exports.VerseSegmentType.Mediant : seg.segmentType, tone = psalmTone[segmentName];
-                if (psalmTone.isMeinrad) {
-                    tone = psalmTone.lines[_this.segments.length][i];
-                    useFlex = false;
-                }
-                else if (psalmTone.lines.length > 1) {
-                    var toneIndex = void 0;
-                    if (psalmTone.lines.length === 2) {
-                        toneIndex = stanzaI < stanzaCount - 1 ? 0 : 1;
-                    }
-                    else {
-                        toneIndex = Math.floor((psalmTone.lines.length * stanzaI) / stanzaCount);
-                    }
-                    tone = psalmTone.lines[toneIndex][segmentName];
-                }
-                var gabc = seg.withGabc(tone, i == 0 || i == _this.segments.length - 1, // use intonation on first and last segment
-                useFlex, stripFlexMediantSymbols, i === 0 && useLargeInitial, minSylsOnRecitingTone);
-                if (i === 0 ||
-                    segments[i - 1].segmentType === exports.VerseSegmentType.Termination) {
-                    gabc = getNextVerseNumberString() + gabc;
-                }
-                var bar;
-                if (psalmTone.isMeinrad) {
-                    if (i === 0) {
-                        bar = segments.length === 2 ? ";" : ",";
-                    }
-                    else if (i === segments.length - 1) {
-                        bar = "::";
-                    }
-                    else {
-                        bar = i % 2 === 0 ? "," : ";";
-                    }
+        return (segments
+            .map(function (seg, i, segments) {
+            var useFlex = seg.segmentType === exports.VerseSegmentType.Flex, segmentName = useFlex ? exports.VerseSegmentType.Mediant : seg.segmentType, tone = psalmTone[segmentName];
+            if (psalmTone.isMeinrad) {
+                tone = psalmTone.lines[segments.length][i];
+                useFlex = false;
+            }
+            else if (psalmTone.lines.length > 1) {
+                var toneIndex = void 0;
+                if (psalmTone.lines.length === 2) {
+                    toneIndex = stanzaI < stanzaCount - 1 ? 0 : 1;
                 }
                 else {
-                    bar = barDictionary[seg.segmentType];
+                    toneIndex = Math.floor((psalmTone.lines.length * stanzaI) / stanzaCount);
                 }
-                if (seg.segmentType === exports.VerseSegmentType.Termination) {
-                    ++stanzaI;
-                    if (i === segments.length - 1) {
-                        // force a double bar on the last segment:
-                        bar = "::";
-                    }
-                    else if (startVersesOnNewLine) {
-                        // never add a line break unless it isn't the last segment
-                        bar += "Z";
-                    }
+                tone = psalmTone.lines[toneIndex][segmentName];
+            }
+            var gabc = seg.withGabc(tone, i == 0 || i == segments.length - 1, // use intonation on first and last segment
+            useFlex, stripFlexMediantSymbols, i === 0 && useLargeInitial, minSylsOnRecitingTone);
+            var bar;
+            if (psalmTone.isMeinrad) {
+                if (i === 0) {
+                    bar = segments.length === 2 ? ";" : ",";
                 }
-                return gabc + (" (" + bar + ")");
-            })
-                .join("\n\n"));
+                else if (i === segments.length - 1) {
+                    bar = "::";
+                }
+                else {
+                    bar = i % 2 === 0 ? "," : ";";
+                }
+            }
+            else {
+                bar = barDictionary[seg.segmentType];
+            }
+            if (seg.segmentType === exports.VerseSegmentType.Termination) {
+                ++stanzaI;
+                if (i === segments.length - 1) {
+                    // force a double bar on the last segment:
+                    bar = "::";
+                }
+                else if (startVersesOnNewLine) {
+                    // never add a line break unless it isn't the last segment
+                    bar += "Z";
+                }
+            }
+            return gabc + (" (" + bar + ")");
+        })
+            .join("\n\n"));
     };
     VerseText.prototype.toString = function () {
         var _this = this;
@@ -388,6 +410,11 @@ var VerseSegment = /** @class */ (function () {
     function VerseSegment(text, syllabifier, type, additionalWhitespace) {
         if (syllabifier === void 0) { syllabifier = VerseText.defaultSyllabifier; }
         if (type === void 0) { type = exports.VerseSegmentType.Termination; }
+        var verseMarkerMatch = /^\s*(?:\(([^)]+)\)|((?:\d+|[℣℟])\.?))/.exec(text);
+        if (verseMarkerMatch) {
+            this.verseMarker = verseMarkerMatch[1] || verseMarkerMatch[2];
+            text = text.slice(verseMarkerMatch[0].length);
+        }
         this.words = VerseSegment.splitIntoWords(text, syllabifier);
         this.syllables = [].concat.apply([], this.words.map(function (word) { return word.syllables; }));
         this.segmentType = type;

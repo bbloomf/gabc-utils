@@ -1,3 +1,12 @@
+# [3.3.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.2.7...v3.3.0) (2021-01-22)
+
+
+### Features
+
+* Handle ℣ and ℟ at the beginnings of verses, process each stanza separated by double newlines separately ([cbb845d](https://gitlab.com/sourceandsummit/gabc-utils/commit/cbb845d1ab9379179d409b67f0750332cbe21f0a))
+
+
+
 ## [3.2.7](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.2.6...v3.2.7) (2021-01-21)
 
 

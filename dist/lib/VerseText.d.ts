@@ -9,9 +9,21 @@ export declare enum VerseSegmentType {
     Mediant = "mediant",
     Termination = "termination"
 }
+export interface VerseGabcOptions {
+    startVersesOnNewLine?: boolean;
+    stripFlexMediantSymbols?: boolean;
+    addSequentialVerseNumbersStartingAt?: number;
+    addInitialVerseNumber?: number | string;
+    minSylsOnRecitingTone?: number;
+    useLargeInitial?: boolean;
+    barDictionary?: {
+        [k in VerseSegmentType]: string;
+    };
+}
 export declare class VerseText {
     static readonly defaultSyllabifier: Syllabifier;
     segments: VerseSegment[];
+    stanzas: VerseSegment[][];
     /**
      *
      * @param text the text to be split into segments
@@ -23,17 +35,8 @@ export declare class VerseText {
      * @param  {Object} psalmTone hash of GabcPsalmTones for flex, mediant, and termination
      * @return {string}           GABC string
      */
-    withGabc(psalmTone: GabcPsalmTones, { startVersesOnNewLine, stripFlexMediantSymbols, addSequentialVerseNumbersStartingAt, addInitialVerseNumber, minSylsOnRecitingTone, useLargeInitial, barDictionary }?: {
-        startVersesOnNewLine?: boolean;
-        stripFlexMediantSymbols?: boolean;
-        addSequentialVerseNumbersStartingAt?: number;
-        addInitialVerseNumber?: number | string;
-        minSylsOnRecitingTone?: number;
-        useLargeInitial?: boolean;
-        barDictionary?: {
-            [k in VerseSegmentType]: string;
-        };
-    }): string;
+    withGabc(psalmTone: GabcPsalmTones, { startVersesOnNewLine, stripFlexMediantSymbols, addSequentialVerseNumbersStartingAt, addInitialVerseNumber, minSylsOnRecitingTone, useLargeInitial, barDictionary }?: VerseGabcOptions): string;
+    getStanzaGabc(psalmTone: GabcPsalmTones, i: number, { startVersesOnNewLine, stripFlexMediantSymbols, minSylsOnRecitingTone, useLargeInitial, barDictionary, }?: VerseGabcOptions): string;
     toString(): string;
     /**
      * Split a text into segments based on the presence of †, * and \n.
@@ -49,6 +52,7 @@ export declare class VerseSegment {
     segmentType: VerseSegmentType;
     accentedSyllables: VerseSyllable[];
     additionalWhitespace: string;
+    verseMarker?: string;
     constructor(text: string, syllabifier?: Syllabifier, type?: VerseSegmentType, additionalWhitespace?: string);
     /**
      * get an array of objects containing a text and a style, based on so many accents and preparatory syllables
