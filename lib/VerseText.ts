@@ -37,14 +37,14 @@ export class VerseText {
    */
   constructor(
     text: string,
-    isEaster: boolean = false,
+    isEaster: boolean | undefined = false,
     syllabifier: Syllabifier = VerseText.defaultSyllabifier
   ) {
     if (isEaster) {
       text = text.replace(/([,;:.!?])?\s*\(E\.\s*T\.\s*([^)]+)\)/g, (whole,punctuation,alleluia) => {
         return `${(punctuation || ',')} ${alleluia}`;
       });
-    } else {
+    } else if (isEaster === false) {
       text = text.replace(/\s*\(E\.\s*T\.[^)]+\)/g,'');
     }
     const stanzas = text.split(/\n\s*\n/);
@@ -262,7 +262,7 @@ export class VerseSegment {
     additionalWhitespace?: string
   ) {
     const verseMarkerMatch = /^\s*(?:\(([^)]+)\)|((?:\d+|[℣℟])\.?))/.exec(text);
-    if (verseMarkerMatch) {
+    if (verseMarkerMatch && !/^[ET]\.\s*[TP]\./.test(verseMarkerMatch[1])) {
       this.verseMarker = verseMarkerMatch[1] || verseMarkerMatch[2];
       text = text.slice(verseMarkerMatch[0].length);
     }

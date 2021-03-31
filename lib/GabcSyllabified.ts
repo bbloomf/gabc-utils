@@ -45,22 +45,23 @@ export class GabcSyllabified {
 
     text = text.replace(/\xad/g, "")
       .replace(/\xa0/g, " ");
+    const notationMatch = notation.match(/(::|[:;,`])(\s[^:;,`]+::\s*)$/);
+    const regexEasterTime = /\s*\([ET]\.\s*[TP]\.[^)]+\)/g;
+    const hasEasterTime = regexEasterTime.test(text);
     if (typeof isEaster === 'boolean') {
-      const notationMatch = notation.match(/(::|[:;,`])(\s[^:;,`]+::\s*)$/);
-      const regexEasterTime = /\s*\([ET]\.\s*[TP]\.[^)]+\)/g;
-      const hasEasterTime = regexEasterTime.test(text);
       if (hasEasterTime) {
         if (isEaster) {
           text = text.replace(/([,;:.!?])?\s*\([ET]\.\s*[TP]\.\s*([^)]+)\)/g, (whole,punctuation,alleluia) => {
             return `${(punctuation || ',')} ${alleluia}`;
           });
-          if (notationMatch?.[1] === '::') notation = notation.slice(0, notationMatch.index) + ':' + notationMatch[2];
+          if (notationMatch) notation = notation.slice(0, notationMatch.index) + ';' + notationMatch[2];
         } else {
           text = text.replace(regexEasterTime, '');
           if (notationMatch) notation = notation.slice(0, notationMatch.index) + '::';
         }
       }
     } else {
+      if (notationMatch) notation = notation.slice(0, notationMatch.index) + '::' + notationMatch[2];
       text = text.replace(
         /([^,.;:\s])\s+\((E|T)\.\s*(T|P)\.\s*(a|A)([^)]+)\)([,.;:]*)/,
         "$1$6 (<i>$2.$3.</i>) A$5$6"
@@ -124,9 +125,7 @@ export class GabcSyllabified {
 
   /*-----  STRING UTIL FUNCTIONS  -----*/
   static stripParens(s: string) {
-    return s.replace(GabcSyllabified.regexFindParensWithLeadSpaces, '$1$2')
-        s.replace(GabcSyllabified.regexFindParens, '$1')
-    ;
+    return s.replace(GabcSyllabified.regexFindParensWithLeadSpaces, '$1$2');
   }
   static stripNonDisplayCharacters(syllable: string) {
     return syllable.replace(/^(\s*)"?\(([\s\S]*?)\)"?$/, '$1$2').replace(/^(\s*)[!(]/, '$1');
