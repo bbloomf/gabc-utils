@@ -37,17 +37,17 @@ var GabcSyllabified = /** @class */ (function () {
         }
         text = text.replace(/\xad/g, "")
             .replace(/\xa0/g, " ");
+        var notationMatch = notation.match(/(::|[:;,`])(\s[^:;,`]+::\s*)$/);
+        var regexEasterTime = /\s*\([ET]\.\s*[TP]\.[^)]+\)/g;
+        var hasEasterTime = regexEasterTime.test(text);
         if (typeof isEaster === 'boolean') {
-            var notationMatch = notation.match(/(::|[:;,`])(\s[^:;,`]+::\s*)$/);
-            var regexEasterTime = /\s*\([ET]\.\s*[TP]\.[^)]+\)/g;
-            var hasEasterTime = regexEasterTime.test(text);
             if (hasEasterTime) {
                 if (isEaster) {
                     text = text.replace(/([,;:.!?])?\s*\([ET]\.\s*[TP]\.\s*([^)]+)\)/g, function (whole, punctuation, alleluia) {
                         return (punctuation || ',') + " " + alleluia;
                     });
-                    if ((notationMatch === null || notationMatch === void 0 ? void 0 : notationMatch[1]) === '::')
-                        notation = notation.slice(0, notationMatch.index) + ':' + notationMatch[2];
+                    if (notationMatch)
+                        notation = notation.slice(0, notationMatch.index) + ';' + notationMatch[2];
                 }
                 else {
                     text = text.replace(regexEasterTime, '');
@@ -57,6 +57,8 @@ var GabcSyllabified = /** @class */ (function () {
             }
         }
         else {
+            if (notationMatch)
+                notation = notation.slice(0, notationMatch.index) + '::' + notationMatch[2];
             text = text.replace(/([^,.;:\s])\s+\((E|T)\.\s*(T|P)\.\s*(a|A)([^)]+)\)([,.;:]*)/, "$1$6 (<i>$2.$3.</i>) A$5$6");
         }
         text = text
@@ -233,7 +235,7 @@ var VerseText = /** @class */ (function () {
                 return (punctuation || ',') + " " + alleluia;
             });
         }
-        else {
+        else if (isEaster === false) {
             text = text.replace(/\s*\(E\.\s*T\.[^)]+\)/g, '');
         }
         var stanzas = text.split(/\n\s*\n/);
@@ -411,7 +413,7 @@ var VerseSegment = /** @class */ (function () {
         if (syllabifier === void 0) { syllabifier = VerseText.defaultSyllabifier; }
         if (type === void 0) { type = exports.VerseSegmentType.Termination; }
         var verseMarkerMatch = /^\s*(?:\(([^)]+)\)|((?:\d+|[℣℟])\.?))/.exec(text);
-        if (verseMarkerMatch) {
+        if (verseMarkerMatch && !/^[ET]\.\s*[TP]\./.test(verseMarkerMatch[1])) {
             this.verseMarker = verseMarkerMatch[1] || verseMarkerMatch[2];
             text = text.slice(verseMarkerMatch[0].length);
         }

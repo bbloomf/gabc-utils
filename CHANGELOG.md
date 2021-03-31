@@ -1,3 +1,12 @@
+## [3.3.2](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.3.1...v3.3.2) (2021-03-31)
+
+
+### Bug Fixes
+
+* **Easter Time directives:** Fix handling of Easter Time directives to use a half bar during Easter Time, and force a double bar when displaying the directive ([868f327](https://gitlab.com/sourceandsummit/gabc-utils/commit/868f3274b5b91d80ba6ce69ddab42f6c0977e418))
+
+
+
 ## [3.3.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.3.0...v3.3.1) (2021-01-22)
 
 

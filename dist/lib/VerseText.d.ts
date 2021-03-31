@@ -29,7 +29,7 @@ export declare class VerseText {
      * @param text the text to be split into segments
      * @param syllabifier a function that takes a word string and returns an array of its syllables
      */
-    constructor(text: string, isEaster?: boolean, syllabifier?: Syllabifier);
+    constructor(text: string, isEaster?: boolean | undefined, syllabifier?: Syllabifier);
     /**
      * Returns a verse with GABC
      * @param  {Object} psalmTone hash of GabcPsalmTones for flex, mediant, and termination
