@@ -61,7 +61,7 @@ export class GabcSyllabified {
         }
       }
     } else {
-      if (notationMatch) notation = notation.slice(0, notationMatch.index) + '::' + notationMatch[2];
+      if (notationMatch && hasEasterTime) notation = notation.slice(0, notationMatch.index) + '::' + notationMatch[2];
       text = text.replace(
         /([^,.;:\s])\s+\((E|T)\.\s*(T|P)\.\s*(a|A)([^)]+)\)([,.;:]*)/,
         "$1$6 (<i>$2.$3.</i>) A$5$6"
