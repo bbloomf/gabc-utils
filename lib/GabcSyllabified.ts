@@ -80,7 +80,7 @@ export class GabcSyllabified {
       .replace(/(\s)\s+/g, '$1')
       .replace(/\\forceHyphen\s+(\S+)\s+--\s+/g, '$1-')
       .replace(/\|([^|]+)\|/g, '+$1+')
-      .replace(/([ -])\+|\+(\W*(?:[-\s]|$))/g, '$1$2')
+      .replace(/([ -])\+|\+([^a-záéíóúýàèìòùäëïöüÿæœǽœ́]*(?:[-\s]|$))/ig, '$1$2')
       .replace(/(^|\s)([^{}\s]+~[^{}\s]+)(?=$|\s)/g,'$1{$2}')
       .trim()
     ;
