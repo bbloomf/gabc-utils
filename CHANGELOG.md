@@ -1,3 +1,12 @@
+## [3.3.4](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.3.3...v3.3.4) (2021-08-17)
+
+
+### Bug Fixes
+
+* :bug: Fix an issue with combining syllables with accented characters ([f1bfcc0](https://gitlab.com/sourceandsummit/gabc-utils/commit/f1bfcc010ea02c0d80afa3bbf0636c883ab928f0))
+
+
+
 ## [3.3.3](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.3.2...v3.3.3) (2021-03-31)
 
 
