@@ -7,6 +7,7 @@ export declare class GabcSyllabified {
     static normalizeInputs(text: string, notation: string, isEaster?: boolean): {
         text: string;
         notation: string;
+        hasRemovedAlleluia: boolean;
     };
     static splitInputs(text: string, notation: string): {
         syllables: string[];

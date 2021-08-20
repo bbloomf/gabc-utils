@@ -1,3 +1,12 @@
+## [3.3.5](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.3.4...v3.3.5) (2021-08-20)
+
+
+### Bug Fixes
+
+* **Easter Time directives:** Fix an issue with removing the easter time directive when isEaster is passed in as false ([f93769f](https://gitlab.com/sourceandsummit/gabc-utils/commit/f93769fff6ad4ca3bdfc5fb6f1b6853b70014dc8))
+
+
+
 ## [3.3.4](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.3.3...v3.3.4) (2021-08-17)
 
 
