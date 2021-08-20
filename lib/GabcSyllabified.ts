@@ -7,7 +7,7 @@ export class GabcSyllabified {
 
   static merge(syllabifiedText: string, musicalNotation: string, isEaster?: boolean, useLargeInitial: boolean = true) {
 
-    const { text, notation } = GabcSyllabified.normalizeInputs(syllabifiedText, musicalNotation, isEaster);
+    const { text, notation, hasRemovedAlleluia } = GabcSyllabified.normalizeInputs(syllabifiedText, musicalNotation, isEaster);
 
     if (!notation) return text;
 
@@ -25,6 +25,9 @@ export class GabcSyllabified {
       .join('')
       .trim()
     ;
+    if (hasRemovedAlleluia) {
+      result = result.replace(/(\((::|[:;,`])\))(?:\s*\([^)]*\))+\s*$/, '(::)');
+    }
 
     // add any additional syllables that come after the last notation data:
     while (sylNdx < syllables.length) {
@@ -35,7 +38,8 @@ export class GabcSyllabified {
   }
 
   /*-----  NORMALIZATION FUNCTIONS  -----*/
-  static normalizeInputs(text: string, notation: string, isEaster?: boolean): { text: string, notation: string } {
+  static normalizeInputs(text: string, notation: string, isEaster?: boolean) {
+    let hasRemovedAlleluia = false;
     // normalize the text, getting rid of multiple consecutive whitespace,
     // and handling lilypond's \forceHyphen directive
     // remove flex and mediant symbols if accents are marked with pipes:
@@ -57,7 +61,7 @@ export class GabcSyllabified {
           if (notationMatch) notation = notation.slice(0, notationMatch.index) + ';' + notationMatch[2];
         } else {
           text = text.replace(regexEasterTime, '');
-          if (notationMatch) notation = notation.slice(0, notationMatch.index) + '::';
+          hasRemovedAlleluia = true;
         }
       }
     } else {
@@ -87,12 +91,12 @@ export class GabcSyllabified {
 
     notation = notation.replace(/%[^\n]*(\n|$)/g, '$1').trim();
 
-    return { text, notation }
+    return { text, notation, hasRemovedAlleluia }
   }
 
 
 
-  static splitInputs(text: string, notation: string): { syllables: string[], notationNodes: string[] } {
+  static splitInputs(text: string, notation: string) {
     let lastSyl: string;
     const syllables = text
       .split(/(\s*(?:(?:<alt>[\s\S]*?<\/alt>|<h\d>[\s\S]*?<\/h\d>)\s*)+)|\s+--\s+|\+|(\s*\(?"[^"]+"\)?-?)|(\s*\([^+)]+\))|(\s*[^\s-+]+-)(?=[^\s-])|(?=\s)/)
