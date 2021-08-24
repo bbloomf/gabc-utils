@@ -5,7 +5,7 @@ var GabcSyllabified = /** @class */ (function () {
     }
     GabcSyllabified.merge = function (syllabifiedText, musicalNotation, isEaster, useLargeInitial) {
         if (useLargeInitial === void 0) { useLargeInitial = true; }
-        var _a = GabcSyllabified.normalizeInputs(syllabifiedText, musicalNotation, isEaster), text = _a.text, notation = _a.notation, hasRemovedAlleluia = _a.hasRemovedAlleluia;
+        var _a = GabcSyllabified.normalizeInputs(syllabifiedText, musicalNotation, isEaster), text = _a.text, notation = _a.notation;
         if (!notation)
             return text;
         var _b = GabcSyllabified.splitInputs(text, notation), syllables = _b.syllables, notationNodes = _b.notationNodes;
@@ -20,9 +20,6 @@ var GabcSyllabified = /** @class */ (function () {
         })
             .join('')
             .trim();
-        if (hasRemovedAlleluia) {
-            result = result.replace(/(\((::|[:;,`])\))(?:\s*\([^)]*\))+\s*$/, '(::)');
-        }
         // add any additional syllables that come after the last notation data:
         while (sylNdx < syllables.length) {
             result +=
@@ -32,7 +29,6 @@ var GabcSyllabified = /** @class */ (function () {
     };
     /*-----  NORMALIZATION FUNCTIONS  -----*/
     GabcSyllabified.normalizeInputs = function (text, notation, isEaster) {
-        var hasRemovedAlleluia = false;
         // normalize the text, getting rid of multiple consecutive whitespace,
         // and handling lilypond's \forceHyphen directive
         // remove flex and mediant symbols if accents are marked with pipes:
@@ -59,7 +55,8 @@ var GabcSyllabified = /** @class */ (function () {
                 }
                 else {
                     text = text.replace(regexEasterTime, '.');
-                    hasRemovedAlleluia = true;
+                    if (notationMatch)
+                        notation = notation.slice(0, notationMatch.index) + '::';
                 }
             }
         }
@@ -83,7 +80,7 @@ var GabcSyllabified = /** @class */ (function () {
             .replace(/(^|\s)([^{}\s]+~[^{}\s]+)(?=$|\s)/g, '$1{$2}')
             .trim();
         notation = notation.replace(/%[^\n]*(\n|$)/g, '$1').trim();
-        return { text: text, notation: notation, hasRemovedAlleluia: hasRemovedAlleluia };
+        return { text: text, notation: notation };
     };
     GabcSyllabified.splitInputs = function (text, notation) {
         var lastSyl;

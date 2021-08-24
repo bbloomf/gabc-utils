@@ -1,3 +1,12 @@
+## [3.3.7](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.3.6...v3.3.7) (2021-08-24)
+
+
+### Bug Fixes
+
+* **Easter Time directives:** :bug: Fix an issue with easter time directives coming after melisma (notes without syllables) ([2a6b1fd](https://gitlab.com/sourceandsummit/gabc-utils/commit/2a6b1fd35a9d9b6bcf0dfdd49ad8366ee85bfac7))
+
+
+
 ## [3.3.6](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.3.5...v3.3.6) (2021-08-24)
 
 
