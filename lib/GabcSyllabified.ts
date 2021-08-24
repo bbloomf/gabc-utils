@@ -7,7 +7,7 @@ export class GabcSyllabified {
 
   static merge(syllabifiedText: string, musicalNotation: string, isEaster?: boolean, useLargeInitial: boolean = true) {
 
-    const { text, notation, hasRemovedAlleluia } = GabcSyllabified.normalizeInputs(syllabifiedText, musicalNotation, isEaster);
+    const { text, notation } = GabcSyllabified.normalizeInputs(syllabifiedText, musicalNotation, isEaster);
 
     if (!notation) return text;
 
@@ -25,9 +25,6 @@ export class GabcSyllabified {
       .join('')
       .trim()
     ;
-    if (hasRemovedAlleluia) {
-      result = result.replace(/(\((::|[:;,`])\))(?:\s*\([^)]*\))+\s*$/, '(::)');
-    }
 
     // add any additional syllables that come after the last notation data:
     while (sylNdx < syllables.length) {
@@ -39,7 +36,6 @@ export class GabcSyllabified {
 
   /*-----  NORMALIZATION FUNCTIONS  -----*/
   static normalizeInputs(text: string, notation: string, isEaster?: boolean) {
-    let hasRemovedAlleluia = false;
     // normalize the text, getting rid of multiple consecutive whitespace,
     // and handling lilypond's \forceHyphen directive
     // remove flex and mediant symbols if accents are marked with pipes:
@@ -65,7 +61,7 @@ export class GabcSyllabified {
           if (notationMatch) notation = notation.slice(0, notationMatch.index) + ';' + notationMatch[2];
         } else {
           text = text.replace(regexEasterTime, '.');
-          hasRemovedAlleluia = true;
+          if (notationMatch) notation = notation.slice(0, notationMatch.index) + '::';
         }
       }
     } else {
@@ -95,7 +91,7 @@ export class GabcSyllabified {
 
     notation = notation.replace(/%[^\n]*(\n|$)/g, '$1').trim();
 
-    return { text, notation, hasRemovedAlleluia }
+    return { text, notation }
   }
 
 
