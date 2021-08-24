@@ -44,28 +44,32 @@ export class GabcSyllabified {
     // and handling lilypond's \forceHyphen directive
     // remove flex and mediant symbols if accents are marked with pipes:
     if (/\|/.test(text)) {
-      text = text.replace(/[†*]/g, "");
+      text = text.replace(/\([†*]\)|[†*]/g, "");
     }
 
     text = text.replace(/\xad/g, "")
       .replace(/\xa0/g, " ");
-    const notationMatch = notation.match(/(::|[:;,`])(\s[^:;,`]+::\s*)$/);
-    const regexEasterTime = /\s*\([ET]\.\s*[TP]\.[^)]+\)/g;
-    const hasEasterTime = regexEasterTime.test(text);
+    let notationMatch: RegExpMatchArray | null = null;
+    const regexEasterTime = /\s*\([ET]\.\s*[TP]\.([^)]+)\)[.!]?\s*$/;
+    const matchEasterTime = regexEasterTime.exec(text);
+    if (matchEasterTime) {
+      const syllableCount = matchEasterTime[1].split(/\s+--\s+|\s+|\+|-|\|([^|\s]+)\|/).filter(syl => syl).length;
+      notationMatch = notation.match(`(::|[:;,])((\\s+[^,\`:;\\s]+(?:\\s+(?:[,\`]|\\([^)]*))*){${syllableCount}}\\s+::\\s*)$`);
+    }
     if (typeof isEaster === 'boolean') {
-      if (hasEasterTime) {
+      if (matchEasterTime) {
         if (isEaster) {
           text = text.replace(/([,;:.!?])?\s*\([ET]\.\s*[TP]\.\s*([^)]+)\)/g, (whole,punctuation,alleluia) => {
             return `${(punctuation || ',')} ${alleluia}`;
           });
           if (notationMatch) notation = notation.slice(0, notationMatch.index) + ';' + notationMatch[2];
         } else {
-          text = text.replace(regexEasterTime, '');
+          text = text.replace(regexEasterTime, '.');
           hasRemovedAlleluia = true;
         }
       }
     } else {
-      if (notationMatch && hasEasterTime) notation = notation.slice(0, notationMatch.index) + '::' + notationMatch[2];
+      if (notationMatch && matchEasterTime) notation = notation.slice(0, notationMatch.index) + '::' + notationMatch[2];
       text = text.replace(
         /([^,.;:\s])\s+\((E|T)\.\s*(T|P)\.\s*(a|A)([^)]+)\)([,.;:]*)/,
         "$1$6 (<i>$2.$3.</i>) A$5$6"

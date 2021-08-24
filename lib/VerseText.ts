@@ -41,10 +41,12 @@ export class VerseText {
     syllabifier: Syllabifier = VerseText.defaultSyllabifier
   ) {
     if (isEaster) {
-      text = text.replace(/([,;:.!?])?\s*\(E\.\s*T\.\s*([^)]+)\)/g, (whole,punctuation,alleluia) => {
-        return `${(punctuation || ',')} ${alleluia}`;
+      text = text.replace(/\s*([†*]?)\s*\(([†*]?)\)/g, ' $2');
+      text = text.replace(/([,;:.!?])?(\s+[†*])?(\s)\s*\(E\.\s*T\.\s*([^)]+)\)/g, (whole, punctuation, flexMediant, whitespace,alleluia) => {
+        return `${(punctuation || ',')}${flexMediant}${whitespace}${alleluia}`;
       });
     } else if (isEaster === false) {
+      text = text.replace(/\s*([†*]?)\s*\(([†*]?)\)/g, ' $1');
       text = text.replace(/\s*\(E\.\s*T\.[^)]+\)/g,'');
     }
     const stanzas = text.split(/\n\s*\n/);
