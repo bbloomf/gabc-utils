@@ -37,15 +37,19 @@ var GabcSyllabified = /** @class */ (function () {
         // and handling lilypond's \forceHyphen directive
         // remove flex and mediant symbols if accents are marked with pipes:
         if (/\|/.test(text)) {
-            text = text.replace(/[†*]/g, "");
+            text = text.replace(/\([†*]\)|[†*]/g, "");
         }
         text = text.replace(/\xad/g, "")
             .replace(/\xa0/g, " ");
-        var notationMatch = notation.match(/(::|[:;,`])(\s[^:;,`]+::\s*)$/);
-        var regexEasterTime = /\s*\([ET]\.\s*[TP]\.[^)]+\)/g;
-        var hasEasterTime = regexEasterTime.test(text);
+        var notationMatch = null;
+        var regexEasterTime = /\s*\([ET]\.\s*[TP]\.([^)]+)\)[.!]?\s*$/;
+        var matchEasterTime = regexEasterTime.exec(text);
+        if (matchEasterTime) {
+            var syllableCount = matchEasterTime[1].split(/\s+--\s+|\s+|\+|-|\|([^|\s]+)\|/).filter(function (syl) { return syl; }).length;
+            notationMatch = notation.match("(::|[:;,])((\\s+[^,`:;\\s]+(?:\\s+(?:[,`]|\\([^)]*))*){" + syllableCount + "}\\s+::\\s*)$");
+        }
         if (typeof isEaster === 'boolean') {
-            if (hasEasterTime) {
+            if (matchEasterTime) {
                 if (isEaster) {
                     text = text.replace(/([,;:.!?])?\s*\([ET]\.\s*[TP]\.\s*([^)]+)\)/g, function (whole, punctuation, alleluia) {
                         return (punctuation || ',') + " " + alleluia;
@@ -54,13 +58,13 @@ var GabcSyllabified = /** @class */ (function () {
                         notation = notation.slice(0, notationMatch.index) + ';' + notationMatch[2];
                 }
                 else {
-                    text = text.replace(regexEasterTime, '');
+                    text = text.replace(regexEasterTime, '.');
                     hasRemovedAlleluia = true;
                 }
             }
         }
         else {
-            if (notationMatch && hasEasterTime)
+            if (notationMatch && matchEasterTime)
                 notation = notation.slice(0, notationMatch.index) + '::' + notationMatch[2];
             text = text.replace(/([^,.;:\s])\s+\((E|T)\.\s*(T|P)\.\s*(a|A)([^)]+)\)([,.;:]*)/, "$1$6 (<i>$2.$3.</i>) A$5$6");
         }
@@ -234,11 +238,13 @@ var VerseText = /** @class */ (function () {
         if (isEaster === void 0) { isEaster = false; }
         if (syllabifier === void 0) { syllabifier = VerseText.defaultSyllabifier; }
         if (isEaster) {
-            text = text.replace(/([,;:.!?])?\s*\(E\.\s*T\.\s*([^)]+)\)/g, function (whole, punctuation, alleluia) {
-                return (punctuation || ',') + " " + alleluia;
+            text = text.replace(/\s*([†*]?)\s*\(([†*]?)\)/g, ' $2');
+            text = text.replace(/([,;:.!?])?(\s+[†*])?(\s)\s*\(E\.\s*T\.\s*([^)]+)\)/g, function (whole, punctuation, flexMediant, whitespace, alleluia) {
+                return "" + (punctuation || ',') + flexMediant + whitespace + alleluia;
             });
         }
         else if (isEaster === false) {
+            text = text.replace(/\s*([†*]?)\s*\(([†*]?)\)/g, ' $1');
             text = text.replace(/\s*\(E\.\s*T\.[^)]+\)/g, '');
         }
         var stanzas = text.split(/\n\s*\n/);

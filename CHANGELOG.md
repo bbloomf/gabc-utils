@@ -1,3 +1,12 @@
+## [3.3.6](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.3.5...v3.3.6) (2021-08-24)
+
+
+### Bug Fixes
+
+* **Easter Time directives:** Better support double alleluia in entrance antiphon easter time directives ([754c85e](https://gitlab.com/sourceandsummit/gabc-utils/commit/754c85e6349d1b54f4edcf0ed3e78a75fdb331ba))
+
+
+
 ## [3.3.5](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.3.4...v3.3.5) (2021-08-20)
 
 
