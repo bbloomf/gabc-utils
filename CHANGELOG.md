@@ -1,3 +1,12 @@
+## [3.3.8](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.3.7...v3.3.8) (2021-08-24)
+
+
+### Bug Fixes
+
+* **Easter Time directives:** :bug: Fix handling of E.T. directive when displayed and the text ends with a melisma not attached to a syllable ([a37dcf2](https://gitlab.com/sourceandsummit/gabc-utils/commit/a37dcf27ea6c6483be5d6beae96e386ed028ebd6))
+
+
+
 ## [3.3.7](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.3.6...v3.3.7) (2021-08-24)
 
 
