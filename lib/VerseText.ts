@@ -1,5 +1,11 @@
+import { findLatinPhraseAccents } from "./findLatinPhraseAccent";
+import { findLatinWordAccent } from "./findLatinWordAccent";
+import { findSpanishPhraseAccents } from "./findSpanishPhraseAccent";
+import { findSpanishWordAccent } from "./findSpanishWordAccent";
 import { GabcPsalmTone, GabcPsalmTones } from "./GabcPsalmTone";
 export type Syllabifier = (word: string) => string[];
+export type WordAccentFinder = (word: VerseSyllable[]) => void;
+export type PhraseAccentFinder = (phrase: VerseWord[]) => void;
 export type FormattedString = {
   text: string;
   style?: "bold" | "italic" | "" | null;
@@ -9,6 +15,7 @@ export enum VerseSegmentType {
   Mediant = "mediant",
   Termination = "termination"
 }
+export type Language = "en"|"es"|"la";
 export interface VerseGabcOptions {
   startVersesOnNewLine?: boolean;
   stripFlexMediantSymbols?: boolean;
@@ -18,8 +25,20 @@ export interface VerseGabcOptions {
   useLargeInitial?: boolean;
   barDictionary?: { [k in VerseSegmentType]: string };
 };
+
+const accentUtils: { [key in Language]: { findWordAccent?: WordAccentFinder, findPhraseAccents?: PhraseAccentFinder }} = {
+  'en': {},
+  'la': { findWordAccent: findLatinWordAccent, findPhraseAccents: findLatinPhraseAccents },
+  'es': { findWordAccent: findSpanishWordAccent, findPhraseAccents: findSpanishPhraseAccents },
+}
+export interface VerseTextArgs {
+  text: string,
+  isEaster?: boolean,
+  language?: Language,
+  syllabify?: Syllabifier,
+}
 export class VerseText {
-  static readonly defaultSyllabifier: Syllabifier = (text) =>
+  static readonly defaultSyllabify: Syllabifier = (text) =>
     text
       .replace(/\\forceHyphen\s+(\S+)\s+--\s+/g, "$1-")
       .replace(/\s+--\s+/g, "+")
@@ -33,13 +52,17 @@ export class VerseText {
   /**
    *
    * @param text the text to be split into segments
-   * @param syllabifier a function that takes a word string and returns an array of its syllables
+   * @param syllabify a function that takes a word string and returns an array of its syllables
    */
   constructor(
-    text: string,
+    text: string | VerseTextArgs,
     isEaster: boolean | undefined = false,
-    syllabifier: Syllabifier = VerseText.defaultSyllabifier
+    syllabify: Syllabifier = VerseText.defaultSyllabify,
+    language: Language = 'en',
   ) {
+    if (typeof text === "object") {
+      ({ text, isEaster, language, syllabify } = text);
+    }
     if (isEaster) {
       text = text.replace(/\s*([†*]?)\s*\(([†*]?)\)/g, ' $2');
       text = text.replace(/([,;:.!?])?(\s+[†*])?(\s)\s*\(E\.\s*T\.\s*([^)]+)\)/g, (whole, punctuation, flexMediant, whitespace,alleluia) => {
@@ -50,7 +73,7 @@ export class VerseText {
       text = text.replace(/\s*\(E\.\s*T\.[^)]+\)/g,'');
     }
     const stanzas = text.split(/\n\s*\n/);
-    this.stanzas = stanzas.map(stanza => VerseText.splitIntoSegments(stanza, syllabifier));
+    this.stanzas = stanzas.map(stanza => VerseText.splitIntoSegments(stanza, syllabify, language));
     this.segments = this.stanzas.flat();
   }
 
@@ -215,12 +238,13 @@ export class VerseText {
   /**
    * Split a text into segments based on the presence of †, * and \n.
    * @param  {string} text          the text to be split
-   * @param  {function} syllabifier a function that takes a string containing a single word, and returns an array of strings of the individual syllables.
+   * @param  {function} syllabify a function that takes a string containing a single word, and returns an array of strings of the individual syllables.
    * @return {VerseSegment[]}       the array of VerseSegment objects
    */
   static splitIntoSegments(
     text: string,
-    syllabifier = VerseText.defaultSyllabifier
+    syllabify = VerseText.defaultSyllabify,
+    language: Language = 'en',
   ): VerseSegment[] {
     let segmentSplit = text.split(/[ \t]*([†*\n/])(\s*)/),
       segments: VerseSegment[] = [];
@@ -232,11 +256,12 @@ export class VerseText {
       segments.push(
         new VerseSegment(
           text,
-          syllabifier,
+          syllabify,
           SegmentTypeDictionary[
             segmentSplit[i + 1] as keyof typeof SegmentTypeDictionary
           ],
-          segmentSplit[i + 2]
+          segmentSplit[i + 2],
+          language,
         )
       );
     }
@@ -259,16 +284,18 @@ export class VerseSegment {
 
   constructor(
     text: string,
-    syllabifier = VerseText.defaultSyllabifier,
+    syllabify = VerseText.defaultSyllabify,
     type: VerseSegmentType = VerseSegmentType.Termination,
-    additionalWhitespace?: string
+    additionalWhitespace?: string,
+    language: Language = 'en',
   ) {
     const verseMarkerMatch = /^\s*(?:\(([^)]+)\)|((?:\d+|[℣℟])\.?))/.exec(text);
     if (verseMarkerMatch && !/^[ET]\.\s*[TP]\./.test(verseMarkerMatch[1])) {
       this.verseMarker = verseMarkerMatch[1] || verseMarkerMatch[2];
       text = text.slice(verseMarkerMatch[0].length);
     }
-    this.words = VerseSegment.splitIntoWords(text, syllabifier);
+    this.words = VerseSegment.splitIntoWords(text, syllabify, language);
+    
     this.syllables = [].concat(...this.words.map((word) => word.syllables));
     this.segmentType = type;
 
@@ -569,8 +596,10 @@ export class VerseSegment {
 
   static splitIntoWords(
     text: string,
-    syllabifier = VerseText.defaultSyllabifier
+    syllabify = VerseText.defaultSyllabify,
+    language: Language = 'en',
   ) {
+    const { findWordAccent, findPhraseAccents } = accentUtils[language];
     let wordSplit = text
       .trim()
       .split(
@@ -597,13 +626,14 @@ export class VerseSegment {
           )} into words`
         );
       }
-      let verseWord = new VerseWord(
-        wordSplit[i + 2],
-        wordSplit[i + 1],
-        wordSplit[i + 3],
-        syllabifier,
-        wordSplit[i]
-      );
+      let verseWord = new VerseWord({
+        text: wordSplit[i + 2],
+        pre: wordSplit[i + 1],
+        post: wordSplit[i + 3],
+        syllabify,
+        findAccents: findWordAccent,
+        verseNumber: wordSplit[i]
+      });
       if (verseWord.isActualWord) {
         if (preWord) {
           verseWord.addPrePunctuation(preWord.syllables.join("").trim());
@@ -617,30 +647,39 @@ export class VerseSegment {
         preWord = verseWord;
       }
     }
+    findPhraseAccents?.(words);
     return words;
   }
 }
 
-class VerseWord {
+interface VerseWordArgs {
+  text: string,
+  pre: string,
+  post: string,
+  syllabify?: Syllabifier,
+  findAccents?: WordAccentFinder,
+  verseNumber?: string
+};
+export class VerseWord {
   isActualWord: boolean;
   prePunctuation: string;
   punctuation: string;
   syllables: VerseSyllable[];
   verseNumber?: string;
 
-  constructor(
-    text: string,
-    pre: string,
-    post: string,
-    syllabifier = VerseText.defaultSyllabifier,
-    verseNumber?: string
-  ) {
+  constructor({
+    text,
+    pre,
+    post,
+    syllabify = VerseText.defaultSyllabify,
+    findAccents,
+    verseNumber
+  }: VerseWordArgs) {
     if (verseNumber) this.verseNumber = verseNumber;
     this.isActualWord = /[a-z]/i.test(text);
     this.prePunctuation = this.punctuation = "";
-    let syllabified = syllabifier(text);
-    this.syllables = syllabified.map(
-      (syl, i) =>
+    this.syllables = syllabify(text).map(
+      (syl, i, syllabified) =>
         new VerseSyllable(
           syl,
           i === 0,
@@ -650,6 +689,7 @@ class VerseWord {
           this
         )
     );
+    findAccents?.(this.syllables);
   }
   /**
    * adds punctuation that comes after the word, but is separated by a space
@@ -672,7 +712,7 @@ class VerseWord {
   }
 }
 
-class VerseSyllable {
+export class VerseSyllable {
   text: string;
   word: VerseWord;
   firstOfWord: boolean;

@@ -12,6 +12,7 @@ export {
   VerseSegmentType,
   VerseText,
   VerseSegment,
+  VerseTextArgs,
 } from './lib/VerseText';
 
 export {

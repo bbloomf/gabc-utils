@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "test": "ts-node tests/index.ts",
+    "test": "ts-node -O '{\"module\":\"CommonJS\"}' tests/index.ts",
     "build": "rm -rf ./dist && rollup -c",
     "start": "rollup -c -w",
     "version": "npm run build && npm run changelog && git add CHANGELOG.md dist/",
