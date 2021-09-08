@@ -2,7 +2,7 @@ import { findLatinPhraseAccents } from "./findLatinPhraseAccent";
 import { findLatinWordAccent } from "./findLatinWordAccent";
 import { findSpanishPhraseAccents } from "./findSpanishPhraseAccent";
 import { findSpanishWordAccent } from "./findSpanishWordAccent";
-import { GabcPsalmTone, GabcPsalmTones } from "./GabcPsalmTone";
+import { GabcPsalmTone, GabcPsalmTones, GabcSingleTone } from "./GabcPsalmTone";
 export type Syllabifier = (word: string) => string[];
 export type WordAccentFinder = (word: VerseSyllable[]) => void;
 export type PhraseAccentFinder = (phrase: VerseWord[]) => void;
@@ -48,6 +48,7 @@ export class VerseText {
       .split(/\+/g);
   segments: VerseSegment[];
   stanzas: VerseSegment[][];
+  language: Language;
 
   /**
    *
@@ -75,6 +76,7 @@ export class VerseText {
     const stanzas = text.split(/\n\s*\n/);
     this.stanzas = stanzas.map(stanza => VerseText.splitIntoSegments(stanza, syllabify, language));
     this.segments = this.stanzas.flat();
+    this.language = language;
   }
 
   /**
@@ -89,7 +91,7 @@ export class VerseText {
       stripFlexMediantSymbols = true,
       addSequentialVerseNumbersStartingAt = 0,
       addInitialVerseNumber,
-      minSylsOnRecitingTone = 2,
+      minSylsOnRecitingTone = psalmTone.isGregorianSolemn ? -1 : 2,
       useLargeInitial = true,
       barDictionary = {
         [VerseSegmentType.Flex]: ",",
@@ -106,6 +108,8 @@ export class VerseText {
       }
       stripFlexMediantSymbols = true;
       barDictionary[VerseSegmentType.Flex] = ";";
+    } else if (psalmTone.isGregorianSolemn) {
+      barDictionary[VerseSegmentType.Flex] = barDictionary[VerseSegmentType.Mediant] = ":";
     }
     let nextSequentialVerseNumber : number | string = addSequentialVerseNumbersStartingAt;
     if (addInitialVerseNumber !== undefined) {
@@ -168,12 +172,41 @@ export class VerseText {
       (segment) => segment.segmentType === VerseSegmentType.Termination
     ).length;
     let stanzaI = 0;
+    let intonationFollowingFlex: GabcSingleTone[] = null;
+    if (psalmTone.isGregorianSolemn) {
+      const termination = psalmTone[VerseSegmentType.Termination];
+      const mediant = psalmTone[VerseSegmentType.Mediant];
+      intonationFollowingFlex = termination.gabc.intonation.flatMap((tone) =>
+        tone.toneAccentFork
+          ? tone.toneAccentFork[tone.toneAccentFork.length - 1]
+          : tone
+      );
+      if (termination.gabc.tenor !== mediant.gabc.tenor) {
+        // handle cases like in tone 6, where the tenor of the termination is different from the tenor of the mediant
+        // by changing the intonation to only include the notes required to get to the tenor pitch
+        let firstMediantTenor = intonationFollowingFlex.findIndex(
+          (tone) => tone.gabc === mediant.gabc.tenor
+        );
+        if (firstMediantTenor < 0) {
+          firstMediantTenor =
+            1 +
+            intonationFollowingFlex.findIndex(
+              (tone) => tone.gabc.indexOf(mediant.gabc.tenor) >= 0
+            );
+        }
+        intonationFollowingFlex = intonationFollowingFlex.slice(
+          0,
+          firstMediantTenor
+        );
+      }
+    }
     return (
       segments
         .map((seg, i, segments) => {
           let useFlex = seg.segmentType === VerseSegmentType.Flex,
             segmentName = useFlex ? VerseSegmentType.Mediant : seg.segmentType,
-            tone = psalmTone[segmentName];
+            tone = psalmTone[segmentName],
+            intonation: boolean | GabcSingleTone[] = false;
           if (psalmTone.isMeinrad) {
             tone = psalmTone.lines[segments.length][i];
             useFlex = false;
@@ -188,13 +221,22 @@ export class VerseText {
             }
             tone = psalmTone.lines[toneIndex][segmentName];
           }
+          if (psalmTone.isGregorianSolemn) {
+            useFlex = false;
+            intonation = true;
+            if (seg.segmentType === VerseSegmentType.Mediant && segments[i - 1]?.segmentType === VerseSegmentType.Flex) {
+              intonation = intonationFollowingFlex;
+            }
+          }
           let gabc = seg.withGabc(
-            tone as GabcPsalmTone,
-            i == 0 || i == segments.length - 1, // use intonation on first and last segment
+            tone,
+            intonation || i == 0 || i == segments.length - 1, // use intonation on first and last segment, and when required by gregorian solemn tones
             useFlex,
             stripFlexMediantSymbols,
             i === 0 && useLargeInitial,
-            minSylsOnRecitingTone
+            minSylsOnRecitingTone,
+            this.language,
+            psalmTone.isGregorianSolemn
           );
           let bar: string;
           if (psalmTone.isMeinrad) {
@@ -295,7 +337,7 @@ export class VerseSegment {
       text = text.slice(verseMarkerMatch[0].length);
     }
     this.words = VerseSegment.splitIntoWords(text, syllabify, language);
-    
+
     this.syllables = [].concat(...this.words.map((word) => word.syllables));
     this.segmentType = type;
 
@@ -418,16 +460,25 @@ export class VerseSegment {
 
   /**
    * returns GABC for this verse segment
-   * @param  {GabcPsalmTone} psalmTone definition for the psalm tone GABC
-   * @return {string}           GABC string
+   * @param psalmTone definition for the psalm tone GABC
+   * @param useIntonation false to ignore intonation, or array to override
+   * @param useFlex 
+   * @param stripFlexMediantSymbols 
+   * @param useLargeInitial 
+   * @param minSylsOnRecitingTone non-negative number, or -1 to require 0 syllables if the intonation ends on the reciting tone, and 1 otherwise
+   * @param language 
+   * @param observePause observe pauses in the text that occur on the reciting tone
+   * @returns GABC string
    */
   withGabc(
     psalmTone: GabcPsalmTone,
-    useIntonation = true,
+    useIntonation: boolean | GabcSingleTone[] = true,
     useFlex = false,
     stripFlexMediantSymbols = true,
     useLargeInitial = false,
-    minSylsOnRecitingTone = 2
+    minSylsOnRecitingTone = 2,
+    language = "en",
+    observePause = false,
   ) {
     if (this.syllables.length === 0) {
       return "";
@@ -462,10 +513,10 @@ export class VerseSegment {
       }
     }
     if (useFlex) {
-      ({ afterLastAccent, preparatory, accents } = psalmTone.getFlexTone("en"));
+      ({ afterLastAccent, preparatory, accents } = psalmTone.getFlexTone(language));
     }
     let firstInterestingAccent = this.accentedSyllables[
-        psalmTone.gabc.accents.length - 1
+        accents.length - 1
       ],
       indexOfFirstInterestingAccent = firstInterestingAccent
         ? firstInterestingAccent.indexInSegment || 0
@@ -487,9 +538,17 @@ export class VerseSegment {
         indexOfFirstPreparatory + preparatory.length
       );
 
+    let intonationForkIndex: number;
     if (useIntonation) {
+      if (minSylsOnRecitingTone === -1) {
+        minSylsOnRecitingTone = intonation[intonation.length - 1].gabc.endsWith(tenor) ? 0 : 1;
+      }
+      if (typeof useIntonation !== 'boolean') {
+        intonation = useIntonation;
+      }
+      intonationForkIndex = intonation.findIndex(tone => tone.toneAccentFork);
       let syllablesOnRecitingTone =
-        syllablesBeforePreparatory.length - intonation.length;
+        syllablesBeforePreparatory.length - intonation.length + (intonationForkIndex >= 0 ? 1 : 0);
       if (
         useFlex &&
         afterLastAccent.length === 0 &&
@@ -508,6 +567,32 @@ export class VerseSegment {
     // prepare GABC of intonation (if any)
     if (!useIntonation) intonation = [];
     if (intonation.length) {
+      if (intonationForkIndex >= 0) {
+        const fork = intonation[intonationForkIndex].toneAccentFork;
+        // in the intonation, a tone accent fork means that we need to consider where accents occur in the intonation syllables
+        const syllablesRequiredFollowingAccent = intonation.length - (intonationForkIndex + 2) + minSylsOnRecitingTone; // Plus Two for the fork itself and the accent following
+        const syllablesToSearchForAccent = syllablesBeforePreparatory.slice(
+          1,
+          Math.min(
+            syllablesBeforePreparatory.length -
+              syllablesRequiredFollowingAccent,
+            1 + intonationForkIndex + fork.length
+          )
+        );
+        const lastUsableAccent = syllablesToSearchForAccent
+          .reverse()
+          .findIndex(
+            (syllable) =>
+              syllable.isAccented ||
+              (syllable.firstOfWord && syllable.lastOfWord)
+          );
+        const accentIndex = lastUsableAccent === -1 ? -1 : syllablesToSearchForAccent.length - 1 - lastUsableAccent;
+        intonation = [
+          ...intonation.slice(0, intonationForkIndex),
+          ...(fork[accentIndex] ?? []),
+          ...intonation.slice(intonationForkIndex + 1),
+        ];
+      }
       for (let i = 0; i < intonation.length; ++i) {
         let syl = syllablesBeforePreparatory.shift();
         if (syl) result += syl.withGabc(intonation[i].gabc);
@@ -515,7 +600,7 @@ export class VerseSegment {
     }
     // handle all syllables on the reciting tone
     syllablesBeforePreparatory.forEach(
-      (syl) => (result += syl.withGabc(tenor || ""))
+      (syl) => (result += syl.withGabc(tenor || "", observePause))
     );
     // handle preparatory syllables
     preparatorySyllables.forEach(
@@ -603,21 +688,22 @@ export class VerseSegment {
     let wordSplit = text
       .trim()
       .split(
-        /([ ,;:.!?"'’”»\]\)—–-]*)(?:$|\s+|^)(?:\[?((?:\d+:\s*)?\d+(?:[a-l]\b)?)\.?\]?\s*)?([\(\[«“‘'"¿¡—–-]*)/
+        /([ ,;:.!?"'’”»\]\)—–-]*)(?:$|\s+(\+\s+)?|^)(?:\[?((?:\d+:\s*)?\d+(?:[a-l]\b)?)\.?\]?\s*)?([\(\[«“‘'"¿¡—–-]*)/
       );
     // the text is now split into an array composed of text that didn't match
-    // the regex, followed by the first group of the regex, and the second
+    // the regex, followed by the first group of the regex, the second, third, and fourth
     // group, and repeating.  We add two empty strings to the beginning and end
-    // of this array so that the array has a number of elements that is divisible by 4
-    // and is of the form [number,pre,word,post, number,pre,word,post,...]
+    // of this array so that the array has a number of elements that is divisible by 5
+    // and is of the form [number,pre,word,post,pause, number,pre,word,post,pause,...]
     wordSplit.unshift("", "");
-    wordSplit.push("");
+    wordSplit.push("", "");
     let words = [],
       lastWord,
       preWord;
-    for (let i = 0; i + 2 < wordSplit.length; i += 4) {
-      if (!wordSplit[i + 2]) {
-        if (!(wordSplit[i + 1] || wordSplit[i + 3])) {
+    for (let i = 0; i + 2 < wordSplit.length; i += 5) {
+      const [verseNumber, pre, text, post, pause] = wordSplit.slice(i, i + 5);
+      if (!text) {
+        if (!(pre || post)) {
           continue;
         }
         console.warn(
@@ -627,12 +713,13 @@ export class VerseSegment {
         );
       }
       let verseWord = new VerseWord({
-        text: wordSplit[i + 2],
-        pre: wordSplit[i + 1],
-        post: wordSplit[i + 3],
+        text,
+        pre,
+        post,
+        pause: !!pause,
         syllabify,
         findAccents: findWordAccent,
-        verseNumber: wordSplit[i]
+        verseNumber
       });
       if (verseWord.isActualWord) {
         if (preWord) {
@@ -656,6 +743,7 @@ interface VerseWordArgs {
   text: string,
   pre: string,
   post: string,
+  pause?: boolean,
   syllabify?: Syllabifier,
   findAccents?: WordAccentFinder,
   verseNumber?: string
@@ -666,11 +754,13 @@ export class VerseWord {
   punctuation: string;
   syllables: VerseSyllable[];
   verseNumber?: string;
+  pause: boolean;
 
   constructor({
     text,
     pre,
     post,
+    pause,
     syllabify = VerseText.defaultSyllabify,
     findAccents,
     verseNumber
@@ -678,6 +768,7 @@ export class VerseWord {
     if (verseNumber) this.verseNumber = verseNumber;
     this.isActualWord = /[a-z]/i.test(text);
     this.prePunctuation = this.punctuation = "";
+    this.pause = !!pause;
     this.syllables = syllabify(text).map(
       (syl, i, syllabified) =>
         new VerseSyllable(
@@ -720,6 +811,7 @@ export class VerseSyllable {
   isAccented: boolean;
   preText: string;
   postText: string;
+  pause: boolean;
 
   indexInSegment?: number;
   indexFromSegmentEnd?: number;
@@ -743,6 +835,7 @@ export class VerseSyllable {
     }
     this.preText = (firstOfWord && pre) || "";
     this.postText = (lastOfWord && post) || "";
+    this.pause = lastOfWord && word.pause;
   }
 
   toString() {
@@ -763,7 +856,10 @@ export class VerseSyllable {
     return this.postText + (this.lastOfWord ? " " : "");
   }
 
-  withGabc(gabc: string) {
+  withGabc(gabc: string, observePause = false) {
+    if (this.pause && observePause) {
+      gabc += ".) (,";
+    }
     return (
       this.preText +
       this.text +
