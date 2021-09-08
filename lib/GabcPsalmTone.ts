@@ -4,6 +4,7 @@ import { shiftGabc } from "./shiftGabc";
 export type GabcPsalmTones = GabcPsalmToneChunk & {
   lines?: (GabcPsalmToneChunk | GabcPsalmTone[])[];
   isMeinrad: boolean;
+  isGregorianSolemn?: boolean;
   originalGabc?: string;
   clef: string;
 };
@@ -16,9 +17,10 @@ export type GabcPsalmToneOptions = {
   treatAsOneAccentWithXPreparatory?: boolean;
   useFlex?: boolean;
   isMeinrad?: boolean;
+  isGregorianSolemn?: boolean;
 };
 
-type GabcSingleTone = {
+export type GabcSingleTone = {
   gabc: string;
   accent?: boolean;
   open?: boolean;
@@ -45,7 +47,15 @@ export class GabcPsalmTone {
     const tenorFlexDrop = parseInt(tenor, 23) - parseInt(flex, 23);
     const preparatory = [];
     let afterLastAccent, accents;
-    if (language === "en") {
+    if (language === "la") {
+      afterLastAccent = [{ gabc: flex ? `${flex}.` : "" }];
+      accents = [
+        [
+          { accent: true, gabc: tenor || "" },
+          { open: true, gabc: flex || "" }
+        ]
+      ];
+    } else {
       afterLastAccent = [];
       accents = [
         [
@@ -58,14 +68,6 @@ export class GabcPsalmTone {
               [{ gabc: tenor }, { gabc: flex, open: true }]
             ]
           }
-        ]
-      ];
-    } else {
-      afterLastAccent = [{ gabc: flex || "" }];
-      accents = [
-        [
-          { accent: true, gabc: tenor || "" },
-          { open: true, gabc: flex || "" }
         ]
       ];
     }
@@ -89,9 +91,12 @@ export class GabcPsalmTone {
     if (!/\|/.test(gabc)) {
       gabc = gabc.replace(/[()]+/g, " ");
     }
-    let { useFlex } = options;
+    let { useFlex, isGregorianSolemn } = options;
     if (/(^|\n)%\s*flex\s*\n/.test(gabc)) {
       useFlex = true;
+    }
+    if (/(^|\n)%\s*gregorianSolemn\s*\n/.test(gabc)) {
+      isGregorianSolemn = true;
     }
     gabc = gabc.replace(/(^|\n)(%[^\n]*\n)+/g, "$1");
     let originalGabc = gabc;
@@ -143,9 +148,21 @@ export class GabcPsalmTone {
       clef = "c4";
     }
     originalGabc = (clef + " " + gabc.trim())
-      .replace(/\(([^|)]+)[^)]*\)/g, "$1")
-      .replace(/\s+([a-m]x[a-mA-M])/, "/$1");
-    gabc = gabc.replace(/\/+/g, " ").replace(/::\s*$/, "");
+      .replace(/\(([^|)]+)[^)]*\)/g, "$1") // remove all but the first option from parenthetic option groups, e.g. (option 1|option 2|option 3)
+      .replace(/\s+([a-m][xy][a-mA-M])/, "/$1"); // use a single / instead of whitespace before accidentals
+    if (/'/.test(gabc)) {
+      options.treatAsOneAccentWithXPreparatory = false;
+    };
+    if (!options.treatAsOneAccentWithXPreparatory) {
+      // convert psalm tone GABC notation to something with visible accent marks and reciting tone marked
+      originalGabc = originalGabc
+        .replace(/((?:^|\n|:)[^\n:r]*?[a-m]r)([\s/])/g, "$10$2") // convert initial punctum cavum to reciting tone
+        .replace(/([a-m]r)[\s/]+((?:[a-m][xy])?[a-m]r)([\s/]+)'([^ /]+)/g, "$1//////$2[ocba:1{]$3$4[ocba:0}]") // add bracketed accents
+        .replace(/'((?:[a-m][xy])?[a-m])/g, "$1r1") // replace accented puncta with proper code to display accents
+        .replace(/r0\s+/g,'r0////////') // add extra space after reciting tone
+        .replace(/r\s+((?:[a-m][xy])?[a-m]r1)/g,'r//////$1'); // add extra space between puncta cava and accented tones
+    }
+    gabc = gabc.replace(/\/{2,}/g, " ").replace(/::\s*$/, "");
     let gabcSegments = gabc.split(/\s+:+\s+/);
 
     let gabcPsalmTones = gabcSegments.map((gabc) => {
@@ -176,6 +193,7 @@ export class GabcPsalmTone {
       [VerseSegmentType.Mediant]: gabcPsalmTones[0],
       [VerseSegmentType.Termination]: gabcPsalmTones[1],
       isMeinrad,
+      isGregorianSolemn,
       originalGabc,
       clef
     };
@@ -212,7 +230,6 @@ export class GabcPsalmTone {
 
   static readonly getTonesForGabcString = (gabc) => {
     let match;
-    let index = 0;
     let regexToneGabc = /(')?(?:\(([^)]+)\)|([^\sr]+)(r)?)(?=$|\s)/gi;
     let tones: GabcSingleTone[] = [];
     while ((match = regexToneGabc.exec(gabc))) {
@@ -246,6 +263,11 @@ export class GabcPsalmTone {
     for (var i = tones.length - 1; i >= 0; --i) {
       var ton = tones[i];
       if (ton.accent) {
+        if (intonation.length > 0) {
+          // if we already have an intonation, then we need to add to it to that, and not to accentedTones
+          intonation.unshift(ton);
+          continue;
+        }
         currentAccentTone = [ton];
         accentedTones.unshift(currentAccentTone);
         state = 1;
