@@ -2,6 +2,7 @@ import { VerseSegmentType } from "./VerseText";
 export declare type GabcPsalmTones = GabcPsalmToneChunk & {
     lines?: (GabcPsalmToneChunk | GabcPsalmTone[])[];
     isMeinrad: boolean;
+    isGregorianSolemn?: boolean;
     originalGabc?: string;
     clef: string;
 };
@@ -14,8 +15,9 @@ export declare type GabcPsalmToneOptions = {
     treatAsOneAccentWithXPreparatory?: boolean;
     useFlex?: boolean;
     isMeinrad?: boolean;
+    isGregorianSolemn?: boolean;
 };
-declare type GabcSingleTone = {
+export declare type GabcSingleTone = {
     gabc: string;
     accent?: boolean;
     open?: boolean;

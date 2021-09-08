@@ -1,3 +1,13 @@
+# [3.4.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.3.8...v3.4.0) (2021-09-08)
+
+
+### Features
+
+* :sparkles: Add language option and handling of finding syllable stress in Spanish and Latin texts ([05e12aa](https://gitlab.com/sourceandsummit/gabc-utils/commit/05e12aa285f37d6eff28e72699f20ca475a6d468))
+* Support Gregorian Solemn Tones, and even Tone 6 ([f4687d7](https://gitlab.com/sourceandsummit/gabc-utils/commit/f4687d7602ccddaa841910d949a90c10b8868bb3))
+
+
+
 ## [3.3.8](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.3.7...v3.3.8) (2021-08-24)
 
 

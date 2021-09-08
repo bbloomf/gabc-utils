@@ -220,20 +220,87 @@ var __assign = function() {
     return __assign.apply(this, arguments);
 };
 
+function __spreadArrays() {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+}
+
+var findLatinPhraseAccents = function (words) {
+    var allSyllables = words.flatMap(function (word) { return word.syllables; });
+    var nextAccentI = allSyllables.length;
+    for (var i = nextAccentI - 1; i >= 0; --i) {
+        var syl = allSyllables[i];
+        if (syl.isAccented) {
+            nextAccentI = i;
+            continue;
+        }
+        if (nextAccentI - i === 3) {
+            nextAccentI = i + 1;
+            allSyllables[nextAccentI].isAccented = true;
+        }
+    }
+    if (nextAccentI === 2) {
+        allSyllables[0].isAccented = true;
+    }
+};
+
+var findLatinWordAccent = function (syllables) {
+    if (syllables.length > 1 && syllables.every(function (syl) { return !syl.isAccented; })) {
+        if (syllables.length <= 3 && /[AEIOUY]/.test(syllables[0].text)) {
+            // If the first syllable is the penult or ante-penult andit contains a capital vowel, then it is accented according to standard non-usage of accented capitals.
+            syllables[0].isAccented = true;
+        }
+        else {
+            // otherwise, apply accent to the penult
+            syllables[syllables.length - 2].isAccented = true;
+        }
+    }
+};
+
+var findSpanishPhraseAccents = function (words) {
+    var _a, _b;
+    var lastWordSyllables = (_b = (_a = words[words.length - 1]) === null || _a === void 0 ? void 0 : _a.syllables) !== null && _b !== void 0 ? _b : [];
+    if (lastWordSyllables.length === 1) {
+        lastWordSyllables[0].isAccented = true;
+    }
+};
+
+var findSpanishWordAccent = function (syllables) {
+    if (syllables.length > 1 && syllables.every(function (syl) { return !syl.isAccented; })) {
+        var lastSyllable = syllables[syllables.length - 1];
+        var accentPenult = /[aeiouy][ns]?$/i.test(lastSyllable.text);
+        var accentIndex = accentPenult ? 2 : 1;
+        syllables[syllables.length - accentIndex].isAccented = true;
+    }
+};
+
 (function (VerseSegmentType) {
     VerseSegmentType["Flex"] = "flex";
     VerseSegmentType["Mediant"] = "mediant";
     VerseSegmentType["Termination"] = "termination";
 })(exports.VerseSegmentType || (exports.VerseSegmentType = {}));
+var accentUtils = {
+    'en': {},
+    'la': { findWordAccent: findLatinWordAccent, findPhraseAccents: findLatinPhraseAccents },
+    'es': { findWordAccent: findSpanishWordAccent, findPhraseAccents: findSpanishPhraseAccents },
+};
 var VerseText = /** @class */ (function () {
     /**
      *
      * @param text the text to be split into segments
-     * @param syllabifier a function that takes a word string and returns an array of its syllables
+     * @param syllabify a function that takes a word string and returns an array of its syllables
      */
-    function VerseText(text, isEaster, syllabifier) {
+    function VerseText(text, isEaster, syllabify, language) {
+        var _a;
         if (isEaster === void 0) { isEaster = false; }
-        if (syllabifier === void 0) { syllabifier = VerseText.defaultSyllabifier; }
+        if (syllabify === void 0) { syllabify = VerseText.defaultSyllabify; }
+        if (language === void 0) { language = 'en'; }
+        if (typeof text === "object") {
+            (_a = text, text = _a.text, isEaster = _a.isEaster, language = _a.language, syllabify = _a.syllabify);
+        }
         if (isEaster) {
             text = text.replace(/\s*([†*]?)\s*\(([†*]?)\)/g, ' $2');
             text = text.replace(/([,;:.!?])?(\s+[†*])?(\s)\s*\(E\.\s*T\.\s*([^)]+)\)/g, function (whole, punctuation, flexMediant, whitespace, alleluia) {
@@ -245,8 +312,9 @@ var VerseText = /** @class */ (function () {
             text = text.replace(/\s*\(E\.\s*T\.[^)]+\)/g, '');
         }
         var stanzas = text.split(/\n\s*\n/);
-        this.stanzas = stanzas.map(function (stanza) { return VerseText.splitIntoSegments(stanza, syllabifier); });
+        this.stanzas = stanzas.map(function (stanza) { return VerseText.splitIntoSegments(stanza, syllabify, language); });
         this.segments = this.stanzas.flat();
+        this.language = language;
     }
     /**
      * Returns a verse with GABC
@@ -256,7 +324,7 @@ var VerseText = /** @class */ (function () {
     VerseText.prototype.withGabc = function (psalmTone, _a) {
         var _b;
         var _this = this;
-        var _c = _a === void 0 ? {} : _a, _d = _c.startVersesOnNewLine, startVersesOnNewLine = _d === void 0 ? false : _d, _e = _c.stripFlexMediantSymbols, stripFlexMediantSymbols = _e === void 0 ? true : _e, _f = _c.addSequentialVerseNumbersStartingAt, addSequentialVerseNumbersStartingAt = _f === void 0 ? 0 : _f, addInitialVerseNumber = _c.addInitialVerseNumber, _g = _c.minSylsOnRecitingTone, minSylsOnRecitingTone = _g === void 0 ? 2 : _g, _h = _c.useLargeInitial, useLargeInitial = _h === void 0 ? true : _h, _j = _c.barDictionary, barDictionary = _j === void 0 ? (_b = {},
+        var _c = _a === void 0 ? {} : _a, _d = _c.startVersesOnNewLine, startVersesOnNewLine = _d === void 0 ? false : _d, _e = _c.stripFlexMediantSymbols, stripFlexMediantSymbols = _e === void 0 ? true : _e, _f = _c.addSequentialVerseNumbersStartingAt, addSequentialVerseNumbersStartingAt = _f === void 0 ? 0 : _f, addInitialVerseNumber = _c.addInitialVerseNumber, _g = _c.minSylsOnRecitingTone, minSylsOnRecitingTone = _g === void 0 ? psalmTone.isGregorianSolemn ? -1 : 2 : _g, _h = _c.useLargeInitial, useLargeInitial = _h === void 0 ? true : _h, _j = _c.barDictionary, barDictionary = _j === void 0 ? (_b = {},
             _b[exports.VerseSegmentType.Flex] = ",",
             _b[exports.VerseSegmentType.Mediant] = ";",
             _b[exports.VerseSegmentType.Termination] = ":",
@@ -269,6 +337,9 @@ var VerseText = /** @class */ (function () {
             }
             stripFlexMediantSymbols = true;
             barDictionary[exports.VerseSegmentType.Flex] = ";";
+        }
+        else if (psalmTone.isGregorianSolemn) {
+            barDictionary[exports.VerseSegmentType.Flex] = barDictionary[exports.VerseSegmentType.Mediant] = ":";
         }
         var nextSequentialVerseNumber = addSequentialVerseNumbersStartingAt;
         if (addInitialVerseNumber !== undefined) {
@@ -313,6 +384,7 @@ var VerseText = /** @class */ (function () {
     };
     VerseText.prototype.getStanzaGabc = function (psalmTone, i, _a) {
         var _b;
+        var _this = this;
         var _c = _a === void 0 ? {} : _a, _d = _c.startVersesOnNewLine, startVersesOnNewLine = _d === void 0 ? false : _d, _e = _c.stripFlexMediantSymbols, stripFlexMediantSymbols = _e === void 0 ? true : _e, _f = _c.minSylsOnRecitingTone, minSylsOnRecitingTone = _f === void 0 ? 2 : _f, _g = _c.useLargeInitial, useLargeInitial = _g === void 0 ? true : _g, _h = _c.barDictionary, barDictionary = _h === void 0 ? (_b = {},
             _b[exports.VerseSegmentType.Flex] = ",",
             _b[exports.VerseSegmentType.Mediant] = ";",
@@ -321,9 +393,31 @@ var VerseText = /** @class */ (function () {
         var segments = this.stanzas[i];
         var stanzaCount = segments.filter(function (segment) { return segment.segmentType === exports.VerseSegmentType.Termination; }).length;
         var stanzaI = 0;
+        var intonationFollowingFlex = null;
+        if (psalmTone.isGregorianSolemn) {
+            var termination = psalmTone[exports.VerseSegmentType.Termination];
+            var mediant_1 = psalmTone[exports.VerseSegmentType.Mediant];
+            intonationFollowingFlex = termination.gabc.intonation.flatMap(function (tone) {
+                return tone.toneAccentFork
+                    ? tone.toneAccentFork[tone.toneAccentFork.length - 1]
+                    : tone;
+            });
+            if (termination.gabc.tenor !== mediant_1.gabc.tenor) {
+                // handle cases like in tone 6, where the tenor of the termination is different from the tenor of the mediant
+                // by changing the intonation to only include the notes required to get to the tenor pitch
+                var firstMediantTenor = intonationFollowingFlex.findIndex(function (tone) { return tone.gabc === mediant_1.gabc.tenor; });
+                if (firstMediantTenor < 0) {
+                    firstMediantTenor =
+                        1 +
+                            intonationFollowingFlex.findIndex(function (tone) { return tone.gabc.indexOf(mediant_1.gabc.tenor) >= 0; });
+                }
+                intonationFollowingFlex = intonationFollowingFlex.slice(0, firstMediantTenor);
+            }
+        }
         return (segments
             .map(function (seg, i, segments) {
-            var useFlex = seg.segmentType === exports.VerseSegmentType.Flex, segmentName = useFlex ? exports.VerseSegmentType.Mediant : seg.segmentType, tone = psalmTone[segmentName];
+            var _a;
+            var useFlex = seg.segmentType === exports.VerseSegmentType.Flex, segmentName = useFlex ? exports.VerseSegmentType.Mediant : seg.segmentType, tone = psalmTone[segmentName], intonation = false;
             if (psalmTone.isMeinrad) {
                 tone = psalmTone.lines[segments.length][i];
                 useFlex = false;
@@ -338,8 +432,15 @@ var VerseText = /** @class */ (function () {
                 }
                 tone = psalmTone.lines[toneIndex][segmentName];
             }
-            var gabc = seg.withGabc(tone, i == 0 || i == segments.length - 1, // use intonation on first and last segment
-            useFlex, stripFlexMediantSymbols, i === 0 && useLargeInitial, minSylsOnRecitingTone);
+            if (psalmTone.isGregorianSolemn) {
+                useFlex = false;
+                intonation = true;
+                if (seg.segmentType === exports.VerseSegmentType.Mediant && ((_a = segments[i - 1]) === null || _a === void 0 ? void 0 : _a.segmentType) === exports.VerseSegmentType.Flex) {
+                    intonation = intonationFollowingFlex;
+                }
+            }
+            var gabc = seg.withGabc(tone, intonation || i == 0 || i == segments.length - 1, // use intonation on first and last segment, and when required by gregorian solemn tones
+            useFlex, stripFlexMediantSymbols, i === 0 && useLargeInitial, minSylsOnRecitingTone, _this.language, psalmTone.isGregorianSolemn);
             var bar;
             if (psalmTone.isMeinrad) {
                 if (i === 0) {
@@ -383,22 +484,23 @@ var VerseText = /** @class */ (function () {
     /**
      * Split a text into segments based on the presence of †, * and \n.
      * @param  {string} text          the text to be split
-     * @param  {function} syllabifier a function that takes a string containing a single word, and returns an array of strings of the individual syllables.
+     * @param  {function} syllabify a function that takes a string containing a single word, and returns an array of strings of the individual syllables.
      * @return {VerseSegment[]}       the array of VerseSegment objects
      */
-    VerseText.splitIntoSegments = function (text, syllabifier) {
-        if (syllabifier === void 0) { syllabifier = VerseText.defaultSyllabifier; }
+    VerseText.splitIntoSegments = function (text, syllabify, language) {
+        if (syllabify === void 0) { syllabify = VerseText.defaultSyllabify; }
+        if (language === void 0) { language = 'en'; }
         var segmentSplit = text.split(/[ \t]*([†*\n/])(\s*)/), segments = [];
         for (var i = 0; i < segmentSplit.length; i += 3) {
             var text_1 = segmentSplit[i];
             if (segmentSplit[i + 1]) {
                 text_1 += " " + segmentSplit[i + 1];
             }
-            segments.push(new VerseSegment(text_1, syllabifier, SegmentTypeDictionary[segmentSplit[i + 1]], segmentSplit[i + 2]));
+            segments.push(new VerseSegment(text_1, syllabify, SegmentTypeDictionary[segmentSplit[i + 1]], segmentSplit[i + 2], language));
         }
         return segments;
     };
-    VerseText.defaultSyllabifier = function (text) {
+    VerseText.defaultSyllabify = function (text) {
         return text
             .replace(/\\forceHyphen\s+(\S+)\s+--\s+/g, "$1-")
             .replace(/\s+--\s+/g, "+")
@@ -415,15 +517,16 @@ var SegmentTypeDictionary = {
     "\n": exports.VerseSegmentType.Termination
 };
 var VerseSegment = /** @class */ (function () {
-    function VerseSegment(text, syllabifier, type, additionalWhitespace) {
-        if (syllabifier === void 0) { syllabifier = VerseText.defaultSyllabifier; }
+    function VerseSegment(text, syllabify, type, additionalWhitespace, language) {
+        if (syllabify === void 0) { syllabify = VerseText.defaultSyllabify; }
         if (type === void 0) { type = exports.VerseSegmentType.Termination; }
+        if (language === void 0) { language = 'en'; }
         var verseMarkerMatch = /^\s*(?:\(([^)]+)\)|((?:\d+|[℣℟])\.?))/.exec(text);
         if (verseMarkerMatch && !/^[ET]\.\s*[TP]\./.test(verseMarkerMatch[1])) {
             this.verseMarker = verseMarkerMatch[1] || verseMarkerMatch[2];
             text = text.slice(verseMarkerMatch[0].length);
         }
-        this.words = VerseSegment.splitIntoWords(text, syllabifier);
+        this.words = VerseSegment.splitIntoWords(text, syllabify, language);
         this.syllables = [].concat.apply([], this.words.map(function (word) { return word.syllables; }));
         this.segmentType = type;
         // mark syllable indices:
@@ -521,21 +624,31 @@ var VerseSegment = /** @class */ (function () {
     };
     /**
      * returns GABC for this verse segment
-     * @param  {GabcPsalmTone} psalmTone definition for the psalm tone GABC
-     * @return {string}           GABC string
+     * @param psalmTone definition for the psalm tone GABC
+     * @param useIntonation false to ignore intonation, or array to override
+     * @param useFlex
+     * @param stripFlexMediantSymbols
+     * @param useLargeInitial
+     * @param minSylsOnRecitingTone non-negative number, or -1 to require 0 syllables if the intonation ends on the reciting tone, and 1 otherwise
+     * @param language
+     * @param observePause observe pauses in the text that occur on the reciting tone
+     * @returns GABC string
      */
-    VerseSegment.prototype.withGabc = function (psalmTone, useIntonation, useFlex, stripFlexMediantSymbols, useLargeInitial, minSylsOnRecitingTone) {
+    VerseSegment.prototype.withGabc = function (psalmTone, useIntonation, useFlex, stripFlexMediantSymbols, useLargeInitial, minSylsOnRecitingTone, language, observePause) {
         var _a;
         var _this = this;
+        var _b;
         if (useIntonation === void 0) { useIntonation = true; }
         if (useFlex === void 0) { useFlex = false; }
         if (stripFlexMediantSymbols === void 0) { stripFlexMediantSymbols = true; }
         if (useLargeInitial === void 0) { useLargeInitial = false; }
         if (minSylsOnRecitingTone === void 0) { minSylsOnRecitingTone = 2; }
+        if (language === void 0) { language = "en"; }
+        if (observePause === void 0) { observePause = false; }
         if (this.syllables.length === 0) {
             return "";
         }
-        var syllables = this.syllables.slice(), _b = psalmTone.gabc, intonation = _b.intonation, preparatory = _b.preparatory, accents = _b.accents, afterLastAccent = _b.afterLastAccent, tenor = _b.tenor, flex = _b.flex, result = "";
+        var syllables = this.syllables.slice(), _c = psalmTone.gabc, intonation = _c.intonation, preparatory = _c.preparatory, accents = _c.accents, afterLastAccent = _c.afterLastAccent, tenor = _c.tenor, flex = _c.flex, result = "";
         if (useLargeInitial && !syllables[0].preText) {
             syllables = syllables.slice();
             var firstSyllable = syllables[0];
@@ -550,9 +663,9 @@ var VerseSegment = /** @class */ (function () {
             }
         }
         if (useFlex) {
-            (_a = psalmTone.getFlexTone("en"), afterLastAccent = _a.afterLastAccent, preparatory = _a.preparatory, accents = _a.accents);
+            (_a = psalmTone.getFlexTone(language), afterLastAccent = _a.afterLastAccent, preparatory = _a.preparatory, accents = _a.accents);
         }
-        var firstInterestingAccent = this.accentedSyllables[psalmTone.gabc.accents.length - 1], indexOfFirstInterestingAccent = firstInterestingAccent
+        var firstInterestingAccent = this.accentedSyllables[accents.length - 1], indexOfFirstInterestingAccent = firstInterestingAccent
             ? firstInterestingAccent.indexInSegment || 0
             : syllables.length, indexOfFirstPreparatory = indexOfFirstInterestingAccent - preparatory.length;
         if (indexOfFirstPreparatory < 0) {
@@ -562,8 +675,16 @@ var VerseSegment = /** @class */ (function () {
             indexOfFirstPreparatory = 0;
         }
         var syllablesBeforePreparatory = syllables.slice(0, indexOfFirstPreparatory), preparatorySyllables = syllables.slice(indexOfFirstPreparatory, indexOfFirstPreparatory + preparatory.length), accentedSyllableAndAfter = syllables.slice(indexOfFirstPreparatory + preparatory.length);
+        var intonationForkIndex;
         if (useIntonation) {
-            var syllablesOnRecitingTone = syllablesBeforePreparatory.length - intonation.length;
+            if (minSylsOnRecitingTone === -1) {
+                minSylsOnRecitingTone = intonation[intonation.length - 1].gabc.endsWith(tenor) ? 0 : 1;
+            }
+            if (typeof useIntonation !== 'boolean') {
+                intonation = useIntonation;
+            }
+            intonationForkIndex = intonation.findIndex(function (tone) { return tone.toneAccentFork; });
+            var syllablesOnRecitingTone = syllablesBeforePreparatory.length - intonation.length + (intonationForkIndex >= 0 ? 1 : 0);
             if (useFlex &&
                 afterLastAccent.length === 0 &&
                 accents.length === 1 &&
@@ -580,6 +701,21 @@ var VerseSegment = /** @class */ (function () {
         if (!useIntonation)
             intonation = [];
         if (intonation.length) {
+            if (intonationForkIndex >= 0) {
+                var fork = intonation[intonationForkIndex].toneAccentFork;
+                // in the intonation, a tone accent fork means that we need to consider where accents occur in the intonation syllables
+                var syllablesRequiredFollowingAccent = intonation.length - (intonationForkIndex + 2) + minSylsOnRecitingTone; // Plus Two for the fork itself and the accent following
+                var syllablesToSearchForAccent = syllablesBeforePreparatory.slice(1, Math.min(syllablesBeforePreparatory.length -
+                    syllablesRequiredFollowingAccent, 1 + intonationForkIndex + fork.length));
+                var lastUsableAccent = syllablesToSearchForAccent
+                    .reverse()
+                    .findIndex(function (syllable) {
+                    return syllable.isAccented ||
+                        (syllable.firstOfWord && syllable.lastOfWord);
+                });
+                var accentIndex = lastUsableAccent === -1 ? -1 : syllablesToSearchForAccent.length - 1 - lastUsableAccent;
+                intonation = __spreadArrays(intonation.slice(0, intonationForkIndex), ((_b = fork[accentIndex]) !== null && _b !== void 0 ? _b : []), intonation.slice(intonationForkIndex + 1));
+            }
             for (var i = 0; i < intonation.length; ++i) {
                 var syl = syllablesBeforePreparatory.shift();
                 if (syl)
@@ -587,7 +723,7 @@ var VerseSegment = /** @class */ (function () {
             }
         }
         // handle all syllables on the reciting tone
-        syllablesBeforePreparatory.forEach(function (syl) { return (result += syl.withGabc(tenor || "")); });
+        syllablesBeforePreparatory.forEach(function (syl) { return (result += syl.withGabc(tenor || "", observePause)); });
         // handle preparatory syllables
         preparatorySyllables.forEach(function (syl, i) { return (result += syl.withGabc(preparatory[i].gabc)); });
         // handle the final accents:
@@ -654,27 +790,38 @@ var VerseSegment = /** @class */ (function () {
     VerseSegment.prototype.toString = function () {
         return this.words.join(" ");
     };
-    VerseSegment.splitIntoWords = function (text, syllabifier) {
-        if (syllabifier === void 0) { syllabifier = VerseText.defaultSyllabifier; }
+    VerseSegment.splitIntoWords = function (text, syllabify, language) {
+        if (syllabify === void 0) { syllabify = VerseText.defaultSyllabify; }
+        if (language === void 0) { language = 'en'; }
+        var _a = accentUtils[language], findWordAccent = _a.findWordAccent, findPhraseAccents = _a.findPhraseAccents;
         var wordSplit = text
             .trim()
-            .split(/([ ,;:.!?"'’”»\]\)—–-]*)(?:$|\s+|^)(?:\[?((?:\d+:\s*)?\d+(?:[a-l]\b)?)\.?\]?\s*)?([\(\[«“‘'"¿¡—–-]*)/);
+            .split(/([ ,;:.!?"'’”»\]\)—–-]*)(?:$|\s+(\+\s+)?|^)(?:\[?((?:\d+:\s*)?\d+(?:[a-l]\b)?)\.?\]?\s*)?([\(\[«“‘'"¿¡—–-]*)/);
         // the text is now split into an array composed of text that didn't match
-        // the regex, followed by the first group of the regex, and the second
+        // the regex, followed by the first group of the regex, the second, third, and fourth
         // group, and repeating.  We add two empty strings to the beginning and end
-        // of this array so that the array has a number of elements that is divisible by 4
-        // and is of the form [number,pre,word,post, number,pre,word,post,...]
+        // of this array so that the array has a number of elements that is divisible by 5
+        // and is of the form [number,pre,word,post,pause, number,pre,word,post,pause,...]
         wordSplit.unshift("", "");
-        wordSplit.push("");
+        wordSplit.push("", "");
         var words = [], lastWord, preWord;
-        for (var i = 0; i + 2 < wordSplit.length; i += 4) {
-            if (!wordSplit[i + 2]) {
-                if (!(wordSplit[i + 1] || wordSplit[i + 3])) {
+        for (var i = 0; i + 2 < wordSplit.length; i += 5) {
+            var _b = wordSplit.slice(i, i + 5), verseNumber = _b[0], pre = _b[1], text_2 = _b[2], post = _b[3], pause = _b[4];
+            if (!text_2) {
+                if (!(pre || post)) {
                     continue;
                 }
                 console.warn("no word found around " + (i + 1) + " when splitting string " + JSON.stringify(wordSplit) + " into words");
             }
-            var verseWord = new VerseWord(wordSplit[i + 2], wordSplit[i + 1], wordSplit[i + 3], syllabifier, wordSplit[i]);
+            var verseWord = new VerseWord({
+                text: text_2,
+                pre: pre,
+                post: post,
+                pause: !!pause,
+                syllabify: syllabify,
+                findAccents: findWordAccent,
+                verseNumber: verseNumber
+            });
             if (verseWord.isActualWord) {
                 if (preWord) {
                     verseWord.addPrePunctuation(preWord.syllables.join("").trim());
@@ -690,22 +837,24 @@ var VerseSegment = /** @class */ (function () {
                 preWord = verseWord;
             }
         }
+        findPhraseAccents === null || findPhraseAccents === void 0 ? void 0 : findPhraseAccents(words);
         return words;
     };
     return VerseSegment;
 }());
 var VerseWord = /** @class */ (function () {
-    function VerseWord(text, pre, post, syllabifier, verseNumber) {
+    function VerseWord(_a) {
         var _this = this;
-        if (syllabifier === void 0) { syllabifier = VerseText.defaultSyllabifier; }
+        var text = _a.text, pre = _a.pre, post = _a.post, pause = _a.pause, _b = _a.syllabify, syllabify = _b === void 0 ? VerseText.defaultSyllabify : _b, findAccents = _a.findAccents, verseNumber = _a.verseNumber;
         if (verseNumber)
             this.verseNumber = verseNumber;
         this.isActualWord = /[a-z]/i.test(text);
         this.prePunctuation = this.punctuation = "";
-        var syllabified = syllabifier(text);
-        this.syllables = syllabified.map(function (syl, i) {
+        this.pause = !!pause;
+        this.syllables = syllabify(text).map(function (syl, i, syllabified) {
             return new VerseSyllable(syl, i === 0, i === syllabified.length - 1, pre, post, _this);
         });
+        findAccents === null || findAccents === void 0 ? void 0 : findAccents(this.syllables);
     }
     /**
      * adds punctuation that comes after the word, but is separated by a space
@@ -740,6 +889,7 @@ var VerseSyllable = /** @class */ (function () {
         }
         this.preText = (firstOfWord && pre) || "";
         this.postText = (lastOfWord && post) || "";
+        this.pause = lastOfWord && word.pause;
     }
     VerseSyllable.prototype.toString = function () {
         return (this.preText + this.text + this.postText + (this.lastOfWord ? " " : ""));
@@ -756,7 +906,11 @@ var VerseSyllable = /** @class */ (function () {
     VerseSyllable.prototype.getPostText = function () {
         return this.postText + (this.lastOfWord ? " " : "");
     };
-    VerseSyllable.prototype.withGabc = function (gabc) {
+    VerseSyllable.prototype.withGabc = function (gabc, observePause) {
+        if (observePause === void 0) { observePause = false; }
+        if (this.pause && observePause) {
+            gabc += ".) (,";
+        }
         return (this.preText +
             this.text +
             this.postText +
@@ -802,6 +956,11 @@ var GabcPsalmTone = /** @class */ (function () {
         for (var i = tones.length - 1; i >= 0; --i) {
             var ton = tones[i];
             if (ton.accent) {
+                if (intonation.length > 0) {
+                    // if we already have an intonation, then we need to add to it to that, and not to accentedTones
+                    intonation.unshift(ton);
+                    continue;
+                }
                 currentAccentTone = [ton];
                 accentedTones.unshift(currentAccentTone);
                 state = 1;
@@ -889,7 +1048,16 @@ var GabcPsalmTone = /** @class */ (function () {
         var tenorFlexDrop = parseInt(tenor, 23) - parseInt(flex, 23);
         var preparatory = [];
         var afterLastAccent, accents;
-        if (language === "en") {
+        if (language === "la") {
+            afterLastAccent = [{ gabc: flex ? flex + "." : "" }];
+            accents = [
+                [
+                    { accent: true, gabc: tenor || "" },
+                    { open: true, gabc: flex || "" }
+                ]
+            ];
+        }
+        else {
             afterLastAccent = [];
             accents = [
                 [
@@ -902,15 +1070,6 @@ var GabcPsalmTone = /** @class */ (function () {
                             [{ gabc: tenor }, { gabc: flex, open: true }]
                         ]
                     }
-                ]
-            ];
-        }
-        else {
-            afterLastAccent = [{ gabc: flex || "" }];
-            accents = [
-                [
-                    { accent: true, gabc: tenor || "" },
-                    { open: true, gabc: flex || "" }
                 ]
             ];
         }
@@ -932,9 +1091,12 @@ var GabcPsalmTone = /** @class */ (function () {
         if (!/\|/.test(gabc)) {
             gabc = gabc.replace(/[()]+/g, " ");
         }
-        var useFlex = options.useFlex;
+        var useFlex = options.useFlex, isGregorianSolemn = options.isGregorianSolemn;
         if (/(^|\n)%\s*flex\s*\n/.test(gabc)) {
             useFlex = true;
+        }
+        if (/(^|\n)%\s*gregorianSolemn\s*\n/.test(gabc)) {
+            isGregorianSolemn = true;
         }
         gabc = gabc.replace(/(^|\n)(%[^\n]*\n)+/g, "$1");
         var originalGabc = gabc;
@@ -980,9 +1142,21 @@ var GabcPsalmTone = /** @class */ (function () {
             clef = "c4";
         }
         originalGabc = (clef + " " + gabc.trim())
-            .replace(/\(([^|)]+)[^)]*\)/g, "$1")
-            .replace(/\s+([a-m]x[a-mA-M])/, "/$1");
-        gabc = gabc.replace(/\/+/g, " ").replace(/::\s*$/, "");
+            .replace(/\(([^|)]+)[^)]*\)/g, "$1") // remove all but the first option from parenthetic option groups, e.g. (option 1|option 2|option 3)
+            .replace(/\s+([a-m][xy][a-mA-M])/, "/$1"); // use a single / instead of whitespace before accidentals
+        if (/'/.test(gabc)) {
+            options.treatAsOneAccentWithXPreparatory = false;
+        }
+        if (!options.treatAsOneAccentWithXPreparatory) {
+            // convert psalm tone GABC notation to something with visible accent marks and reciting tone marked
+            originalGabc = originalGabc
+                .replace(/((?:^|\n|:)[^\n:r]*?[a-m]r)([\s/])/g, "$10$2") // convert initial punctum cavum to reciting tone
+                .replace(/([a-m]r)[\s/]+((?:[a-m][xy])?[a-m]r)([\s/]+)'([^ /]+)/g, "$1//////$2[ocba:1{]$3$4[ocba:0}]") // add bracketed accents
+                .replace(/'((?:[a-m][xy])?[a-m])/g, "$1r1") // replace accented puncta with proper code to display accents
+                .replace(/r0\s+/g, 'r0////////') // add extra space after reciting tone
+                .replace(/r\s+((?:[a-m][xy])?[a-m]r1)/g, 'r//////$1'); // add extra space between puncta cava and accented tones
+        }
+        gabc = gabc.replace(/\/{2,}/g, " ").replace(/::\s*$/, "");
         var gabcSegments = gabc.split(/\s+:+\s+/);
         var gabcPsalmTones = gabcSegments.map(function (gabc) {
             gabc = gabc.trim();
@@ -1008,6 +1182,7 @@ var GabcPsalmTone = /** @class */ (function () {
             _a[exports.VerseSegmentType.Mediant] = gabcPsalmTones[0],
             _a[exports.VerseSegmentType.Termination] = gabcPsalmTones[1],
             _a.isMeinrad = isMeinrad,
+            _a.isGregorianSolemn = isGregorianSolemn,
             _a.originalGabc = originalGabc,
             _a.clef = clef,
             _a);
