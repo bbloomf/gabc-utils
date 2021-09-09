@@ -228,7 +228,7 @@ function __spreadArrays() {
     return r;
 }
 
-var findLatinPhraseAccents = function (words) {
+function findLatinPhraseAccents(words) {
     var allSyllables = words.flatMap(function (word) { return word.syllables; });
     var nextAccentI = allSyllables.length;
     for (var i = nextAccentI - 1; i >= 0; --i) {
@@ -245,9 +245,9 @@ var findLatinPhraseAccents = function (words) {
     if (nextAccentI === 2) {
         allSyllables[0].isAccented = true;
     }
-};
+}
 
-var findLatinWordAccent = function (syllables) {
+function findLatinWordAccent(syllables) {
     if (syllables.length > 1 && syllables.every(function (syl) { return !syl.isAccented; })) {
         if (syllables.length <= 3 && /[AEIOUY]/.test(syllables[0].text)) {
             // If the first syllable is the penult or ante-penult andit contains a capital vowel, then it is accented according to standard non-usage of accented capitals.
@@ -258,35 +258,30 @@ var findLatinWordAccent = function (syllables) {
             syllables[syllables.length - 2].isAccented = true;
         }
     }
-};
+}
 
-var findSpanishPhraseAccents = function (words) {
+function findSpanishPhraseAccents(words) {
     var _a, _b;
     var lastWordSyllables = (_b = (_a = words[words.length - 1]) === null || _a === void 0 ? void 0 : _a.syllables) !== null && _b !== void 0 ? _b : [];
     if (lastWordSyllables.length === 1) {
         lastWordSyllables[0].isAccented = true;
     }
-};
+}
 
-var findSpanishWordAccent = function (syllables) {
+function findSpanishWordAccent(syllables) {
     if (syllables.length > 1 && syllables.every(function (syl) { return !syl.isAccented; })) {
         var lastSyllable = syllables[syllables.length - 1];
         var accentPenult = /[aeiouy][ns]?$/i.test(lastSyllable.text);
         var accentIndex = accentPenult ? 2 : 1;
         syllables[syllables.length - accentIndex].isAccented = true;
     }
-};
+}
 
 (function (VerseSegmentType) {
     VerseSegmentType["Flex"] = "flex";
     VerseSegmentType["Mediant"] = "mediant";
     VerseSegmentType["Termination"] = "termination";
 })(exports.VerseSegmentType || (exports.VerseSegmentType = {}));
-var accentUtils = {
-    'en': {},
-    'la': { findWordAccent: findLatinWordAccent, findPhraseAccents: findLatinPhraseAccents },
-    'es': { findWordAccent: findSpanishWordAccent, findPhraseAccents: findSpanishPhraseAccents },
-};
 var VerseText = /** @class */ (function () {
     /**
      *
@@ -793,6 +788,11 @@ var VerseSegment = /** @class */ (function () {
     VerseSegment.splitIntoWords = function (text, syllabify, language) {
         if (syllabify === void 0) { syllabify = VerseText.defaultSyllabify; }
         if (language === void 0) { language = 'en'; }
+        var accentUtils = {
+            'en': {},
+            'la': { findWordAccent: findLatinWordAccent, findPhraseAccents: findLatinPhraseAccents },
+            'es': { findWordAccent: findSpanishWordAccent, findPhraseAccents: findSpanishPhraseAccents },
+        };
         var _a = accentUtils[language], findWordAccent = _a.findWordAccent, findPhraseAccents = _a.findPhraseAccents;
         var wordSplit = text
             .trim()
@@ -1151,7 +1151,7 @@ var GabcPsalmTone = /** @class */ (function () {
             // convert psalm tone GABC notation to something with visible accent marks and reciting tone marked
             originalGabc = originalGabc
                 .replace(/((?:^|\n|:)[^\n:r]*?[a-m]r)([\s/])/g, "$10$2") // convert initial punctum cavum to reciting tone
-                .replace(/([a-m]r)[\s/]+((?:[a-m][xy])?[a-m]r)([\s/]+)'([^ /]+)/g, "$1//////$2[ocba:1{]$3$4[ocba:0}]") // add bracketed accents
+                .replace(/(\s[^'\s]+)[\s/]+((?:[a-m][xy])?[a-m]r)([\s/]+)'([^ /]+)/g, "$1//////$2[ocba:1{]$3$4[ocba:0}]") // add bracketed accents
                 .replace(/'((?:[a-m][xy])?[a-m])/g, "$1r1") // replace accented puncta with proper code to display accents
                 .replace(/r0\s+/g, 'r0////////') // add extra space after reciting tone
                 .replace(/r\s+((?:[a-m][xy])?[a-m]r1)/g, 'r//////$1'); // add extra space between puncta cava and accented tones

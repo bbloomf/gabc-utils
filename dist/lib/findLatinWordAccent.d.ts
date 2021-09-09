@@ -1,2 +1,2 @@
-import { WordAccentFinder } from "./VerseText";
-export declare const findLatinWordAccent: WordAccentFinder;
+import { VerseSyllable } from "./VerseText";
+export declare function findLatinWordAccent(syllables: VerseSyllable[]): void;

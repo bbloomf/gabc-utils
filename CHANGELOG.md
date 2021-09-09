@@ -1,3 +1,13 @@
+## [3.4.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.4.0...v3.4.1) (2021-09-09)
+
+
+### Bug Fixes
+
+* Fix code to work with google scripts ([c8518f1](https://gitlab.com/sourceandsummit/gabc-utils/commit/c8518f11ed737b2d39d50606a7fceafb4c6a5638))
+* Fix handling of when to group the white note before an accent note ([965f9ef](https://gitlab.com/sourceandsummit/gabc-utils/commit/965f9ef969fa39aeb3fbcc26cade43b41dd1dfd5))
+
+
+
 # [3.4.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.3.8...v3.4.0) (2021-09-08)
 
 
