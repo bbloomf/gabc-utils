@@ -1,8 +1,8 @@
-import { PhraseAccentFinder, VerseWord } from "./VerseText";
+import { VerseWord } from "./VerseText";
 
-export const findLatinPhraseAccents: PhraseAccentFinder = (
+export function findLatinPhraseAccents(
   words: VerseWord[]
-) => {
+) {
   const allSyllables = words.flatMap((word) => word.syllables);
   let nextAccentI = allSyllables.length;
   for (let i = nextAccentI - 1; i >= 0; --i) {

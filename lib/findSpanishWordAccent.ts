@@ -1,8 +1,8 @@
-import { WordAccentFinder, VerseSyllable } from "./VerseText";
+import { VerseSyllable } from "./VerseText";
 
-export const findSpanishWordAccent: WordAccentFinder = (
+export function findSpanishWordAccent(
   syllables: VerseSyllable[]
-) => {
+) {
   if (syllables.length > 1 && syllables.every((syl) => !syl.isAccented)) {
     const lastSyllable = syllables[syllables.length - 1];
     const accentPenult = /[aeiouy][ns]?$/i.test(lastSyllable.text);

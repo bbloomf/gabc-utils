@@ -26,11 +26,6 @@ export interface VerseGabcOptions {
   barDictionary?: { [k in VerseSegmentType]: string };
 };
 
-const accentUtils: { [key in Language]: { findWordAccent?: WordAccentFinder, findPhraseAccents?: PhraseAccentFinder }} = {
-  'en': {},
-  'la': { findWordAccent: findLatinWordAccent, findPhraseAccents: findLatinPhraseAccents },
-  'es': { findWordAccent: findSpanishWordAccent, findPhraseAccents: findSpanishPhraseAccents },
-}
 export interface VerseTextArgs {
   text: string,
   isEaster?: boolean,
@@ -684,6 +679,11 @@ export class VerseSegment {
     syllabify = VerseText.defaultSyllabify,
     language: Language = 'en',
   ) {
+    const accentUtils: { [key in Language]: { findWordAccent?: WordAccentFinder, findPhraseAccents?: PhraseAccentFinder }} = {
+      'en': {},
+      'la': { findWordAccent: findLatinWordAccent, findPhraseAccents: findLatinPhraseAccents },
+      'es': { findWordAccent: findSpanishWordAccent, findPhraseAccents: findSpanishPhraseAccents },
+    }  
     const { findWordAccent, findPhraseAccents } = accentUtils[language];
     let wordSplit = text
       .trim()
