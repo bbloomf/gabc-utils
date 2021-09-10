@@ -1,3 +1,12 @@
+# [3.5.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.4.2...v3.5.0) (2021-09-10)
+
+
+### Features
+
+* Handle tones with accents followed by white notes with a further neume before the next accent ([f54704c](https://gitlab.com/sourceandsummit/gabc-utils/commit/f54704c3a0e0f15ecf01d6770e124b5f0c062601))
+
+
+
 ## [3.4.2](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.4.1...v3.4.2) (2021-09-10)
 
 

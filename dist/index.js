@@ -740,7 +740,7 @@ var VerseSegment = /** @class */ (function () {
                 if (sylI >= endSylI)
                     return;
                 var syl = accentedSyllableAndAfter[sylI];
-                if (accentTone.accent) {
+                if (accentTone.accent || (!accentTone.open && i === accentTones.length - 1)) {
                     // we're looking for an accented syllable
                     if (syl.isAccented ||
                         (sylI + 1 === endSylI && i === accentTones.length - 1)) {
@@ -966,6 +966,9 @@ var GabcPsalmTone = /** @class */ (function () {
                 state = 1;
                 if (lastOpen) {
                     currentAccentTone.push(lastOpen);
+                    if (preparatory.length) {
+                        currentAccentTone.push.apply(currentAccentTone, preparatory);
+                    }
                     lastOpen = undefined;
                 }
                 else if (tones[i - 1].open) {
