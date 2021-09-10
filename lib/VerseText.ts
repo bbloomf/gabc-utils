@@ -624,7 +624,7 @@ export class VerseSegment {
       accentTones.forEach((accentTone, i) => {
         if (sylI >= endSylI) return;
         let syl = accentedSyllableAndAfter[sylI];
-        if (accentTone.accent) {
+        if (accentTone.accent || (!accentTone.open && i === accentTones.length - 1)) {
           // we're looking for an accented syllable
           if (
             syl.isAccented ||

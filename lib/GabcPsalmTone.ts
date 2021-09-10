@@ -273,6 +273,9 @@ export class GabcPsalmTone {
         state = 1;
         if (lastOpen) {
           currentAccentTone.push(lastOpen);
+          if (preparatory.length) {
+            currentAccentTone.push(...preparatory);
+          }
           lastOpen = undefined;
         } else if (tones[i - 1].open) {
           currentAccentTone.unshift(tones[i - 1]);
