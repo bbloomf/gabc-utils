@@ -1154,7 +1154,7 @@ var GabcPsalmTone = /** @class */ (function () {
                 .replace(/(\s[^'\s]+)[\s/]+((?:[a-m][xy])?[a-m]r)([\s/]+)'([^ /]+)/g, "$1//////$2[ocba:1{]$3$4[ocba:0}]") // add bracketed accents
                 .replace(/'((?:[a-m][xy])?[a-m])/g, "$1r1") // replace accented puncta with proper code to display accents
                 .replace(/r0\s+/g, 'r0////////') // add extra space after reciting tone
-                .replace(/r\s+((?:[a-m][xy])?[a-m]r1)/g, 'r//////$1'); // add extra space between puncta cava and accented tones
+                .replace(/r\s+((?:[^r\s,;:]*\s+)*)((?:[a-m][xy])?[a-m]r1)/g, 'r//////$1$2'); // add extra space between puncta cava and accented tones
         }
         gabc = gabc.replace(/\/{2,}/g, " ").replace(/::\s*$/, "");
         var gabcSegments = gabc.split(/\s+:+\s+/);

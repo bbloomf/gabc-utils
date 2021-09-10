@@ -1,3 +1,12 @@
+## [3.4.2](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.4.1...v3.4.2) (2021-09-10)
+
+
+### Bug Fixes
+
+* Fix display of certain psalm tones with melody only ([bc81594](https://gitlab.com/sourceandsummit/gabc-utils/commit/bc81594d973565794069f9a9fafcf609ae5efe91))
+
+
+
 ## [3.4.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.4.0...v3.4.1) (2021-09-09)
 
 
