@@ -1,3 +1,12 @@
+## [3.5.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.5.0...v3.5.1) (2021-09-10)
+
+
+### Bug Fixes
+
+* Fix psalm tone display when there is a termination consisting of a grouped accent with preparatory syllables ([8a2f69f](https://gitlab.com/sourceandsummit/gabc-utils/commit/8a2f69f71e6d08d8636b14c04af0c5801a73963a))
+
+
+
 # [3.5.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.4.2...v3.5.0) (2021-09-10)
 
 
