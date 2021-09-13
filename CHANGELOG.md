@@ -1,3 +1,12 @@
+## [3.5.2](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.5.1...v3.5.2) (2021-09-13)
+
+
+### Bug Fixes
+
+* Fix a bug with formatting texts with psalm tones of more than one accent ([60c621d](https://gitlab.com/sourceandsummit/gabc-utils/commit/60c621d2c44026a55b71780acf8b934daa9e3eed))
+
+
+
 ## [3.5.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.5.0...v3.5.1) (2021-09-10)
 
 

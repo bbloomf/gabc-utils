@@ -532,8 +532,7 @@ var VerseSegment = /** @class */ (function () {
             .forEach(function (syl, i) { return (syl.indexFromSegmentEnd = i); });
         // mark the last two accents as 0 and 1:
         this.accentedSyllables = this.syllables
-            .filter(function (syl) { return syl.isAccented; })
-            .reverse();
+            .filter(function (syl) { return syl.isAccented; });
         this.additionalWhitespace = additionalWhitespace || "";
     }
     /**
