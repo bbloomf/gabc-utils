@@ -36,6 +36,7 @@ declare type SyllableCounts = {
     accents: number;
     preparatory: number;
     afterLastAccent: number;
+    accentHasMultipleSyllables: boolean[];
 };
 export declare class GabcPsalmTone {
     getFlexTone(language: string): GabcInfo;

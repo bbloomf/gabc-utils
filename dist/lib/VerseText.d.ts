@@ -72,9 +72,10 @@ export declare class VerseSegment {
      * @param  {string} syllableSeparator string used to separate syllables within the same word, defaults to \xAD
      * @return {Object[]}             Array of {text, style} objects
      */
-    getFormattedStrings({ accents, preparatory, onlyMarkFirstPreparatory, syllableSeparator, includeVerseNumbers }?: {
+    getFormattedStrings({ accents, preparatory, accentHasMultipleSyllables, onlyMarkFirstPreparatory, syllableSeparator, includeVerseNumbers }?: {
         accents?: number;
         preparatory?: number;
+        accentHasMultipleSyllables?: boolean[];
         onlyMarkFirstPreparatory?: boolean;
         syllableSeparator?: string;
         includeVerseNumbers?: boolean;

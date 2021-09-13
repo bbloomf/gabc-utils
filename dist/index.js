@@ -228,6 +228,20 @@ function __spreadArrays() {
     return r;
 }
 
+var applyStyleToSyllables = function (style, syllables, result) {
+    var lastSyllable = syllables[syllables.length - 1];
+    var workingString = {
+        style: style,
+        text: syllables.length > 1
+            ? syllables[0].withoutPreText() +
+                syllables.slice(1, -1).join("") +
+                lastSyllable.withoutPostText()
+            : syllables[0].text,
+    };
+    result.push(workingString);
+    return { text: lastSyllable.getPostText() };
+};
+
 function findLatinPhraseAccents(words) {
     var allSyllables = words.flatMap(function (word) { return word.syllables; });
     var nextAccentI = allSyllables.length;
@@ -545,7 +559,7 @@ var VerseSegment = /** @class */ (function () {
      */
     VerseSegment.prototype.getFormattedStrings = function (_a) {
         var _this = this;
-        var _b = _a === void 0 ? {} : _a, _c = _b.accents, accents = _c === void 0 ? 0 : _c, _d = _b.preparatory, preparatory = _d === void 0 ? 0 : _d, _e = _b.onlyMarkFirstPreparatory, onlyMarkFirstPreparatory = _e === void 0 ? false : _e, _f = _b.syllableSeparator, syllableSeparator = _f === void 0 ? "\xAD" : _f, _g = _b.includeVerseNumbers, includeVerseNumbers = _g === void 0 ? false : _g;
+        var _b = _a === void 0 ? {} : _a, _c = _b.accents, accents = _c === void 0 ? 0 : _c, _d = _b.preparatory, preparatory = _d === void 0 ? 0 : _d, _e = _b.accentHasMultipleSyllables, accentHasMultipleSyllables = _e === void 0 ? [] : _e, _f = _b.onlyMarkFirstPreparatory, onlyMarkFirstPreparatory = _f === void 0 ? false : _f, _g = _b.syllableSeparator, syllableSeparator = _g === void 0 ? "\xAD" : _g, _h = _b.includeVerseNumbers, includeVerseNumbers = _h === void 0 ? false : _h;
         var markedAccents = this.accentedSyllables.slice(this.accentedSyllables.length - accents);
         var firstAccentIndex = markedAccents.length
             ? markedAccents[0].indexInSegment || 0
@@ -570,43 +584,34 @@ var VerseSegment = /** @class */ (function () {
             : firstAccentIndex;
         var italics = this.syllables.slice(nextSyllableIndex, lastItalicIndex);
         if (italics.length) {
-            var lastItalic = italics[italics.length - 1];
             workingString.text += italics[0].getPreText();
             result.push(workingString);
-            if (italics.length > 1) {
-                workingString = {
-                    style: "italic",
-                    text: italics[0].withoutPreText() +
-                        italics.slice(1, -1).join("") +
-                        lastItalic.withoutPostText()
-                };
-            }
-            else {
-                workingString = {
-                    style: "italic",
-                    text: italics[0].text
-                };
-            }
-            result.push(workingString);
-            workingString = { text: lastItalic.getPostText() };
+            workingString = applyStyleToSyllables('italic', italics, result);
             var nonItalic = this.syllables.slice(lastItalicIndex, firstAccentIndex);
             workingString.text += nonItalic.join("");
         }
         nextSyllableIndex = firstAccentIndex;
         markedAccents.forEach(function (accent, i) {
+            var _a;
+            var hasMultipleSyllables = accentHasMultipleSyllables[i];
             workingString.text += accent.getPreText();
-            result.push(workingString);
-            workingString = { style: "bold", text: accent.text };
-            result.push(workingString);
+            if (workingString.text)
+                result.push(workingString);
             var nextAccent = markedAccents[i + 1];
-            workingString = { text: accent.getPostText() };
+            var nextAccentIndex = (_a = nextAccent === null || nextAccent === void 0 ? void 0 : nextAccent.indexInSegment) !== null && _a !== void 0 ? _a : _this.syllables.length;
+            var nextSyllables = _this.syllables.slice((accent.indexInSegment || 0) + 1, nextAccentIndex);
+            var bold = [accent];
+            if (hasMultipleSyllables && nextSyllables.length > 1) {
+                // splice the next syllables but one into bold; nextSyllables now contains only one.
+                bold.push.apply(bold, nextSyllables.splice(0, nextSyllables.length - 1));
+            }
+            workingString = applyStyleToSyllables('bold', bold, result);
             if (nextAccent) {
-                var nextSyllables_1 = _this.syllables.slice((accent.indexInSegment || 0) + 1, nextAccent.indexInSegment);
-                workingString.text += nextSyllables_1.join("");
-                nextSyllableIndex = nextAccent.indexInSegment || 0;
+                workingString.text += nextSyllables.join("");
+                nextSyllableIndex = nextAccentIndex;
             }
             else {
-                ++nextSyllableIndex;
+                nextSyllableIndex += bold.length;
             }
         });
         var nextSyllables = this.syllables.slice(nextSyllableIndex);
@@ -1042,7 +1047,8 @@ var GabcPsalmTone = /** @class */ (function () {
             intonation: intonation.length,
             accents: accentedTones.length,
             preparatory: preparatory.length,
-            afterLastAccent: afterLastAccent.length
+            afterLastAccent: afterLastAccent.length,
+            accentHasMultipleSyllables: accentedTones.map(function (tones) { var _a; return (_a = tones === null || tones === void 0 ? void 0 : tones[0]) === null || _a === void 0 ? void 0 : _a.open; }),
         };
     }
     GabcPsalmTone.prototype.getFlexTone = function (language) {

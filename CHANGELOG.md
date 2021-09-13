@@ -1,3 +1,12 @@
+## [3.5.3](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.5.2...v3.5.3) (2021-09-13)
+
+
+### Bug Fixes
+
+* Fix an issue with pointing verses of psalm tones that require multiple syllables bolded when the accent has two non-accented syllables following it ([dc7d5fb](https://gitlab.com/sourceandsummit/gabc-utils/commit/dc7d5fb0d786f34fdd1845eecb3be8d8aeb69566))
+
+
+
 ## [3.5.2](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.5.1...v3.5.2) (2021-09-13)
 
 
