@@ -346,7 +346,8 @@ export class VerseSegment {
 
     // mark the last two accents as 0 and 1:
     this.accentedSyllables = this.syllables
-      .filter((syl) => syl.isAccented);
+      .filter((syl) => syl.isAccented)
+      .reverse();
 
     this.additionalWhitespace = additionalWhitespace || "";
   }
@@ -375,8 +376,9 @@ export class VerseSegment {
     includeVerseNumbers?: boolean;
   } = {}): FormattedString[] {
     let markedAccents = this.accentedSyllables.slice(
-      this.accentedSyllables.length - accents
-    );
+      0,
+      accents
+    ).reverse();
     let firstAccentIndex = markedAccents.length
       ? markedAccents[0].indexInSegment || 0
       : this.syllables.length;
