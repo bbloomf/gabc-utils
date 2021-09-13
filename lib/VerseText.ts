@@ -1,3 +1,4 @@
+import { applyStyleToSyllables } from "./applyStyleToSyllables";
 import { findLatinPhraseAccents } from "./findLatinPhraseAccent";
 import { findLatinWordAccent } from "./findLatinWordAccent";
 import { findSpanishPhraseAccents } from "./findSpanishPhraseAccent";
@@ -361,12 +362,14 @@ export class VerseSegment {
   getFormattedStrings({
     accents = 0,
     preparatory = 0,
+    accentHasMultipleSyllables = [],
     onlyMarkFirstPreparatory = false,
     syllableSeparator = "\xAD",
     includeVerseNumbers = false
   }: {
     accents?: number;
     preparatory?: number;
+    accentHasMultipleSyllables?: boolean[]
     onlyMarkFirstPreparatory?: boolean;
     syllableSeparator?: string;
     includeVerseNumbers?: boolean;
@@ -402,47 +405,36 @@ export class VerseSegment {
       : firstAccentIndex;
     let italics = this.syllables.slice(nextSyllableIndex, lastItalicIndex);
     if (italics.length) {
-      let lastItalic = italics[italics.length - 1];
       workingString.text += italics[0].getPreText();
       result.push(workingString);
-      if (italics.length > 1) {
-        workingString = {
-          style: "italic",
-          text:
-            italics[0].withoutPreText() +
-            italics.slice(1, -1).join("") +
-            lastItalic.withoutPostText()
-        };
-      } else {
-        workingString = {
-          style: "italic",
-          text: italics[0].text
-        };
-      }
-      result.push(workingString);
-      workingString = { text: lastItalic.getPostText() };
+      workingString = applyStyleToSyllables('italic', italics, result);
       let nonItalic = this.syllables.slice(lastItalicIndex, firstAccentIndex);
       workingString.text += nonItalic.join("");
     }
     nextSyllableIndex = firstAccentIndex;
     markedAccents.forEach((accent, i) => {
+      const hasMultipleSyllables = accentHasMultipleSyllables[i];
       workingString.text += accent.getPreText();
-      result.push(workingString);
-
-      workingString = { style: "bold", text: accent.text };
-      result.push(workingString);
-
+      if (workingString.text) result.push(workingString);
       let nextAccent = markedAccents[i + 1];
-      workingString = { text: accent.getPostText() };
+      let nextAccentIndex = nextAccent?.indexInSegment ?? this.syllables.length;
+      const nextSyllables = this.syllables.slice(
+        (accent.indexInSegment || 0) + 1,
+        nextAccentIndex
+      );
+
+      const bold = [accent];
+      if (hasMultipleSyllables && nextSyllables.length > 1) {
+        // splice the next syllables but one into bold; nextSyllables now contains only one.
+        bold.push(...nextSyllables.splice(0, nextSyllables.length - 1));
+      }
+      workingString = applyStyleToSyllables('bold', bold, result);
+
       if (nextAccent) {
-        let nextSyllables = this.syllables.slice(
-          (accent.indexInSegment || 0) + 1,
-          nextAccent.indexInSegment
-        );
         workingString.text += nextSyllables.join("");
-        nextSyllableIndex = nextAccent.indexInSegment || 0;
+        nextSyllableIndex = nextAccentIndex;
       } else {
-        ++nextSyllableIndex;
+        nextSyllableIndex += bold.length;
       }
     });
     let nextSyllables = this.syllables.slice(nextSyllableIndex);

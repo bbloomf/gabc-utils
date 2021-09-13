@@ -39,6 +39,7 @@ type SyllableCounts = {
   accents: number;
   preparatory: number;
   afterLastAccent: number;
+  accentHasMultipleSyllables: boolean[];
 };
 
 export class GabcPsalmTone {
@@ -344,7 +345,8 @@ export class GabcPsalmTone {
       intonation: intonation.length,
       accents: accentedTones.length,
       preparatory: preparatory.length,
-      afterLastAccent: afterLastAccent.length
+      afterLastAccent: afterLastAccent.length,
+      accentHasMultipleSyllables: accentedTones.map(tones => tones?.[0]?.open),
     };
   }
 }
