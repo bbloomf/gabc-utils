@@ -1,3 +1,12 @@
+## [3.5.4](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.5.3...v3.5.4) (2021-09-13)
+
+
+### Bug Fixes
+
+* Fix a bug with applying psalm tones ([88d9eeb](https://gitlab.com/sourceandsummit/gabc-utils/commit/88d9eeb25b2298363163be9d1e56c4d909837312))
+
+
+
 ## [3.5.3](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.5.2...v3.5.3) (2021-09-13)
 
 

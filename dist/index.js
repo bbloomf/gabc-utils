@@ -546,7 +546,8 @@ var VerseSegment = /** @class */ (function () {
             .forEach(function (syl, i) { return (syl.indexFromSegmentEnd = i); });
         // mark the last two accents as 0 and 1:
         this.accentedSyllables = this.syllables
-            .filter(function (syl) { return syl.isAccented; });
+            .filter(function (syl) { return syl.isAccented; })
+            .reverse();
         this.additionalWhitespace = additionalWhitespace || "";
     }
     /**
@@ -560,7 +561,7 @@ var VerseSegment = /** @class */ (function () {
     VerseSegment.prototype.getFormattedStrings = function (_a) {
         var _this = this;
         var _b = _a === void 0 ? {} : _a, _c = _b.accents, accents = _c === void 0 ? 0 : _c, _d = _b.preparatory, preparatory = _d === void 0 ? 0 : _d, _e = _b.accentHasMultipleSyllables, accentHasMultipleSyllables = _e === void 0 ? [] : _e, _f = _b.onlyMarkFirstPreparatory, onlyMarkFirstPreparatory = _f === void 0 ? false : _f, _g = _b.syllableSeparator, syllableSeparator = _g === void 0 ? "\xAD" : _g, _h = _b.includeVerseNumbers, includeVerseNumbers = _h === void 0 ? false : _h;
-        var markedAccents = this.accentedSyllables.slice(this.accentedSyllables.length - accents);
+        var markedAccents = this.accentedSyllables.slice(0, accents).reverse();
         var firstAccentIndex = markedAccents.length
             ? markedAccents[0].indexInSegment || 0
             : this.syllables.length;
