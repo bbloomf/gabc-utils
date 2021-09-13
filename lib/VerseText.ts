@@ -345,8 +345,7 @@ export class VerseSegment {
 
     // mark the last two accents as 0 and 1:
     this.accentedSyllables = this.syllables
-      .filter((syl) => syl.isAccented)
-      .reverse();
+      .filter((syl) => syl.isAccented);
 
     this.additionalWhitespace = additionalWhitespace || "";
   }
