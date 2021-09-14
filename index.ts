@@ -1,21 +1,23 @@
-export { GabcSyllabified } from './lib/GabcSyllabified';
+export { GabcSyllabified } from "./lib/GabcSyllabified";
 
 export {
   GabcPsalmTones,
   GabcPsalmToneOptions,
   GabcPsalmTone,
-} from './lib/GabcPsalmTone';
+} from "./lib/GabcPsalmTone";
 
-export { 
+export {
   Syllabifier,
   FormattedString,
   VerseSegmentType,
   VerseText,
   VerseSegment,
   VerseTextArgs,
-} from './lib/VerseText';
+} from "./lib/VerseText";
+
+export { GabcWithTitles, splitGabcByTitle } from "./lib/GabcWithTitles";
 
 export {
-  GabcWithTitles,
-  splitGabcByTitle,
-} from './lib/GabcWithTitles';
+  removeSolesmesMarkings,
+  removeSolesmesMarkingsInMixedGabc,
+} from "./lib/removeSolesmesMarkings";

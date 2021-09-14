@@ -4,6 +4,7 @@ import { findLatinWordAccent } from "./findLatinWordAccent";
 import { findSpanishPhraseAccents } from "./findSpanishPhraseAccent";
 import { findSpanishWordAccent } from "./findSpanishWordAccent";
 import { GabcPsalmTone, GabcPsalmTones, GabcSingleTone } from "./GabcPsalmTone";
+import { removeSolesmesMarkingsInMixedGabc } from "./removeSolesmesMarkings";
 export type Syllabifier = (word: string) => string[];
 export type WordAccentFinder = (word: VerseSyllable[]) => void;
 export type PhraseAccentFinder = (phrase: VerseWord[]) => void;
@@ -24,6 +25,7 @@ export interface VerseGabcOptions {
   addInitialVerseNumber?: number | string;
   minSylsOnRecitingTone?: number;
   useLargeInitial?: boolean;
+  removeSolesmesMarkings?: boolean;
   barDictionary?: { [k in VerseSegmentType]: string };
 };
 
@@ -89,6 +91,7 @@ export class VerseText {
       addInitialVerseNumber,
       minSylsOnRecitingTone = psalmTone.isGregorianSolemn ? -1 : 2,
       useLargeInitial = true,
+      removeSolesmesMarkings = false,
       barDictionary = {
         [VerseSegmentType.Flex]: ",",
         [VerseSegmentType.Mediant]: ";",
@@ -143,6 +146,7 @@ export class VerseText {
           minSylsOnRecitingTone,
           useLargeInitial: useLargeInitial && i === 0 && verseMarker === '',
           barDictionary,
+          removeSolesmesMarkings,
         })
       ).join('\n\n')
     );
@@ -161,6 +165,7 @@ export class VerseText {
         [VerseSegmentType.Mediant]: ";",
         [VerseSegmentType.Termination]: ":"
       },
+      removeSolesmesMarkings = false,
     }: VerseGabcOptions = {}
   ) {
     const segments = this.stanzas[i];
@@ -232,7 +237,8 @@ export class VerseText {
             i === 0 && useLargeInitial,
             minSylsOnRecitingTone,
             this.language,
-            psalmTone.isGregorianSolemn
+            psalmTone.isGregorianSolemn,
+            removeSolesmesMarkings,
           );
           let bar: string;
           if (psalmTone.isMeinrad) {
@@ -467,6 +473,7 @@ export class VerseSegment {
     minSylsOnRecitingTone = 2,
     language = "en",
     observePause = false,
+    removeSolesmesMarkings = false,
   ) {
     if (this.syllables.length === 0) {
       return "";
@@ -660,6 +667,9 @@ export class VerseSegment {
       );
     }
     if (stripFlexMediantSymbols) result = result.replace(/\s+[*†]/g, "");
+    if (removeSolesmesMarkings) {
+      result = removeSolesmesMarkingsInMixedGabc(result);
+    }
     return result;
   }
 
