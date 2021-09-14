@@ -19,6 +19,7 @@ export interface VerseGabcOptions {
     addInitialVerseNumber?: number | string;
     minSylsOnRecitingTone?: number;
     useLargeInitial?: boolean;
+    removeSolesmesMarkings?: boolean;
     barDictionary?: {
         [k in VerseSegmentType]: string;
     };
@@ -45,8 +46,8 @@ export declare class VerseText {
      * @param  {Object} psalmTone hash of GabcPsalmTones for flex, mediant, and termination
      * @return {string}           GABC string
      */
-    withGabc(psalmTone: GabcPsalmTones, { startVersesOnNewLine, stripFlexMediantSymbols, addSequentialVerseNumbersStartingAt, addInitialVerseNumber, minSylsOnRecitingTone, useLargeInitial, barDictionary }?: VerseGabcOptions): string;
-    getStanzaGabc(psalmTone: GabcPsalmTones, i: number, { startVersesOnNewLine, stripFlexMediantSymbols, minSylsOnRecitingTone, useLargeInitial, barDictionary, }?: VerseGabcOptions): string;
+    withGabc(psalmTone: GabcPsalmTones, { startVersesOnNewLine, stripFlexMediantSymbols, addSequentialVerseNumbersStartingAt, addInitialVerseNumber, minSylsOnRecitingTone, useLargeInitial, removeSolesmesMarkings, barDictionary }?: VerseGabcOptions): string;
+    getStanzaGabc(psalmTone: GabcPsalmTones, i: number, { startVersesOnNewLine, stripFlexMediantSymbols, minSylsOnRecitingTone, useLargeInitial, barDictionary, removeSolesmesMarkings, }?: VerseGabcOptions): string;
     toString(): string;
     /**
      * Split a text into segments based on the presence of †, * and \n.
@@ -92,7 +93,7 @@ export declare class VerseSegment {
      * @param observePause observe pauses in the text that occur on the reciting tone
      * @returns GABC string
      */
-    withGabc(psalmTone: GabcPsalmTone, useIntonation?: boolean | GabcSingleTone[], useFlex?: boolean, stripFlexMediantSymbols?: boolean, useLargeInitial?: boolean, minSylsOnRecitingTone?: number, language?: string, observePause?: boolean): string;
+    withGabc(psalmTone: GabcPsalmTone, useIntonation?: boolean | GabcSingleTone[], useFlex?: boolean, stripFlexMediantSymbols?: boolean, useLargeInitial?: boolean, minSylsOnRecitingTone?: number, language?: string, observePause?: boolean, removeSolesmesMarkings?: boolean): string;
     toString(): string;
     static splitIntoWords(text: string, syllabify?: Syllabifier, language?: Language): any[];
 }

@@ -1,3 +1,12 @@
+# [3.6.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.5.4...v3.6.0) (2021-09-14)
+
+
+### Features
+
+* Add a function to remove solesmes markings ([362c0d8](https://gitlab.com/sourceandsummit/gabc-utils/commit/362c0d8623f5c28fa6aedb8c6f5a1d7779f97709))
+
+
+
 ## [3.5.4](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.5.3...v3.5.4) (2021-09-13)
 
 

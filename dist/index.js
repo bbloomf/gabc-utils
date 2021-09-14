@@ -291,6 +291,9 @@ function findSpanishWordAccent(syllables) {
     }
 }
 
+var removeSolesmesMarkings = function (gabc) { return gabc === null || gabc === void 0 ? void 0 : gabc.replace(/(\S)[_']+\d?|\.+\d?$/g, "$1").replace(/(\.+\d?)\/+/gi, "//").replace(/(\.+\d?)!/gi, "/").replace(/(\.+\d?)/gi, ""); };
+var removeSolesmesMarkingsInMixedGabc = function (mixedGabc) { return mixedGabc === null || mixedGabc === void 0 ? void 0 : mixedGabc.replace(/\([^\)]+/g, removeSolesmesMarkings); };
+
 (function (VerseSegmentType) {
     VerseSegmentType["Flex"] = "flex";
     VerseSegmentType["Mediant"] = "mediant";
@@ -333,11 +336,11 @@ var VerseText = /** @class */ (function () {
     VerseText.prototype.withGabc = function (psalmTone, _a) {
         var _b;
         var _this = this;
-        var _c = _a === void 0 ? {} : _a, _d = _c.startVersesOnNewLine, startVersesOnNewLine = _d === void 0 ? false : _d, _e = _c.stripFlexMediantSymbols, stripFlexMediantSymbols = _e === void 0 ? true : _e, _f = _c.addSequentialVerseNumbersStartingAt, addSequentialVerseNumbersStartingAt = _f === void 0 ? 0 : _f, addInitialVerseNumber = _c.addInitialVerseNumber, _g = _c.minSylsOnRecitingTone, minSylsOnRecitingTone = _g === void 0 ? psalmTone.isGregorianSolemn ? -1 : 2 : _g, _h = _c.useLargeInitial, useLargeInitial = _h === void 0 ? true : _h, _j = _c.barDictionary, barDictionary = _j === void 0 ? (_b = {},
+        var _c = _a === void 0 ? {} : _a, _d = _c.startVersesOnNewLine, startVersesOnNewLine = _d === void 0 ? false : _d, _e = _c.stripFlexMediantSymbols, stripFlexMediantSymbols = _e === void 0 ? true : _e, _f = _c.addSequentialVerseNumbersStartingAt, addSequentialVerseNumbersStartingAt = _f === void 0 ? 0 : _f, addInitialVerseNumber = _c.addInitialVerseNumber, _g = _c.minSylsOnRecitingTone, minSylsOnRecitingTone = _g === void 0 ? psalmTone.isGregorianSolemn ? -1 : 2 : _g, _h = _c.useLargeInitial, useLargeInitial = _h === void 0 ? true : _h, _j = _c.removeSolesmesMarkings, removeSolesmesMarkings = _j === void 0 ? false : _j, _k = _c.barDictionary, barDictionary = _k === void 0 ? (_b = {},
             _b[exports.VerseSegmentType.Flex] = ",",
             _b[exports.VerseSegmentType.Mediant] = ";",
             _b[exports.VerseSegmentType.Termination] = ":",
-            _b) : _j;
+            _b) : _k;
         if (psalmTone.isMeinrad) {
             // some default overrides for meinrad tones, and a check to make sure there are 2-6 segments
             var stanzaLengths = this.stanzas.map(function (segments) { return segments.length; });
@@ -388,6 +391,7 @@ var VerseText = /** @class */ (function () {
                     minSylsOnRecitingTone: minSylsOnRecitingTone,
                     useLargeInitial: useLargeInitial && i === 0 && verseMarker === '',
                     barDictionary: barDictionary,
+                    removeSolesmesMarkings: removeSolesmesMarkings,
                 });
         }).join('\n\n'));
     };
@@ -398,7 +402,7 @@ var VerseText = /** @class */ (function () {
             _b[exports.VerseSegmentType.Flex] = ",",
             _b[exports.VerseSegmentType.Mediant] = ";",
             _b[exports.VerseSegmentType.Termination] = ":",
-            _b) : _h;
+            _b) : _h, _j = _c.removeSolesmesMarkings, removeSolesmesMarkings = _j === void 0 ? false : _j;
         var segments = this.stanzas[i];
         var stanzaCount = segments.filter(function (segment) { return segment.segmentType === exports.VerseSegmentType.Termination; }).length;
         var stanzaI = 0;
@@ -449,7 +453,7 @@ var VerseText = /** @class */ (function () {
                 }
             }
             var gabc = seg.withGabc(tone, intonation || i == 0 || i == segments.length - 1, // use intonation on first and last segment, and when required by gregorian solemn tones
-            useFlex, stripFlexMediantSymbols, i === 0 && useLargeInitial, minSylsOnRecitingTone, _this.language, psalmTone.isGregorianSolemn);
+            useFlex, stripFlexMediantSymbols, i === 0 && useLargeInitial, minSylsOnRecitingTone, _this.language, psalmTone.isGregorianSolemn, removeSolesmesMarkings);
             var bar;
             if (psalmTone.isMeinrad) {
                 if (i === 0) {
@@ -634,7 +638,7 @@ var VerseSegment = /** @class */ (function () {
      * @param observePause observe pauses in the text that occur on the reciting tone
      * @returns GABC string
      */
-    VerseSegment.prototype.withGabc = function (psalmTone, useIntonation, useFlex, stripFlexMediantSymbols, useLargeInitial, minSylsOnRecitingTone, language, observePause) {
+    VerseSegment.prototype.withGabc = function (psalmTone, useIntonation, useFlex, stripFlexMediantSymbols, useLargeInitial, minSylsOnRecitingTone, language, observePause, removeSolesmesMarkings) {
         var _a;
         var _this = this;
         var _b;
@@ -645,6 +649,7 @@ var VerseSegment = /** @class */ (function () {
         if (minSylsOnRecitingTone === void 0) { minSylsOnRecitingTone = 2; }
         if (language === void 0) { language = "en"; }
         if (observePause === void 0) { observePause = false; }
+        if (removeSolesmesMarkings === void 0) { removeSolesmesMarkings = false; }
         if (this.syllables.length === 0) {
             return "";
         }
@@ -785,6 +790,9 @@ var VerseSegment = /** @class */ (function () {
         }
         if (stripFlexMediantSymbols)
             result = result.replace(/\s+[*†]/g, "");
+        if (removeSolesmesMarkings) {
+            result = removeSolesmesMarkingsInMixedGabc(result);
+        }
         return result;
     };
     VerseSegment.prototype.toString = function () {
@@ -1280,5 +1288,7 @@ exports.GabcPsalmTone = GabcPsalmTone;
 exports.GabcSyllabified = GabcSyllabified;
 exports.VerseSegment = VerseSegment;
 exports.VerseText = VerseText;
+exports.removeSolesmesMarkings = removeSolesmesMarkings;
+exports.removeSolesmesMarkingsInMixedGabc = removeSolesmesMarkingsInMixedGabc;
 exports.splitGabcByTitle = splitGabcByTitle;
 //# sourceMappingURL=index.js.map
