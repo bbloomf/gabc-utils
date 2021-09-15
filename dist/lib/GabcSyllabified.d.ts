@@ -1,10 +1,16 @@
+export interface GabcSyllabifiedOptions {
+    isEaster?: boolean;
+    useLargeInitial?: boolean;
+    removeSolesmesMarkings?: boolean;
+}
 export declare class GabcSyllabified {
     static readonly regexClef: RegExp;
     static readonly regexNonSyllabicGabc: RegExp;
     static readonly regexFindParensWithLeadSpaces: RegExp;
     static readonly regexFindParens: RegExp;
-    static merge(syllabifiedText: string, musicalNotation: string, isEaster?: boolean, useLargeInitial?: boolean): string;
-    static normalizeInputs(text: string, notation: string, isEaster?: boolean): {
+    static merge(syllabifiedText: string, musicalNotation: string, isEaster?: boolean, useLargeInitial?: boolean): any;
+    static merge(syllabifiedText: string, musicalNotation: string, options?: GabcSyllabifiedOptions): any;
+    static normalizeInputs(text: string, notation: string, isEaster?: boolean, removeSolesmes?: boolean): {
         text: string;
         notation: string;
     };

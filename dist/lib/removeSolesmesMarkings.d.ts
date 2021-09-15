@@ -1,2 +1,2 @@
-export declare const removeSolesmesMarkings: (gabc?: string) => string;
-export declare const removeSolesmesMarkingsInMixedGabc: (mixedGabc?: string) => string;
+export declare function removeSolesmesMarkings(gabc?: string): string;
+export declare function removeSolesmesMarkingsInMixedGabc(mixedGabc?: string): string;

@@ -1,14 +1,26 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
+function removeSolesmesMarkings(gabc) {
+    return gabc === null || gabc === void 0 ? void 0 : gabc.replace(/(\S)[_']+\d?|\.+\d?$/g, "$1").replace(/(\.+\d?)\/+/gi, "//").replace(/(\.+\d?)!/gi, "/").replace(/(\.+\d?)/gi, "");
+}
+function removeSolesmesMarkingsInMixedGabc(mixedGabc) {
+    return mixedGabc === null || mixedGabc === void 0 ? void 0 : mixedGabc.replace(/\([^\)]+/g, removeSolesmesMarkings);
+}
+
 var GabcSyllabified = /** @class */ (function () {
     function GabcSyllabified() {
     }
     GabcSyllabified.merge = function (syllabifiedText, musicalNotation, isEaster, useLargeInitial) {
+        var _a, _b, _c;
         if (useLargeInitial === void 0) { useLargeInitial = true; }
-        var _a = GabcSyllabified.normalizeInputs(syllabifiedText, musicalNotation, isEaster), text = _a.text, notation = _a.notation;
+        var removeSolesmesMarkings = false;
+        if (isEaster && typeof isEaster === 'object') {
+            (_a = isEaster, isEaster = _a.isEaster, _b = _a.useLargeInitial, useLargeInitial = _b === void 0 ? true : _b, _c = _a.removeSolesmesMarkings, removeSolesmesMarkings = _c === void 0 ? false : _c);
+        }
+        var _d = GabcSyllabified.normalizeInputs(syllabifiedText, musicalNotation, isEaster, removeSolesmesMarkings), text = _d.text, notation = _d.notation;
         if (!notation)
             return text;
-        var _b = GabcSyllabified.splitInputs(text, notation), syllables = _b.syllables, notationNodes = _b.notationNodes;
+        var _e = GabcSyllabified.splitInputs(text, notation), syllables = _e.syllables, notationNodes = _e.notationNodes;
         var sylNdx = 0;
         var isFirstSyl = true;
         var result = notationNodes
@@ -28,7 +40,7 @@ var GabcSyllabified = /** @class */ (function () {
         return result;
     };
     /*-----  NORMALIZATION FUNCTIONS  -----*/
-    GabcSyllabified.normalizeInputs = function (text, notation, isEaster) {
+    GabcSyllabified.normalizeInputs = function (text, notation, isEaster, removeSolesmes) {
         // normalize the text, getting rid of multiple consecutive whitespace,
         // and handling lilypond's \forceHyphen directive
         // remove flex and mediant symbols if accents are marked with pipes:
@@ -80,6 +92,9 @@ var GabcSyllabified = /** @class */ (function () {
             .replace(/(^|\s)([^{}\s]+~[^{}\s]+)(?=$|\s)/g, '$1{$2}')
             .trim();
         notation = notation.replace(/%[^\n]*(\n|$)/g, '$1').trim();
+        if (removeSolesmes) {
+            notation = removeSolesmesMarkings(notation);
+        }
         return { text: text, notation: notation };
     };
     GabcSyllabified.splitInputs = function (text, notation) {
@@ -290,9 +305,6 @@ function findSpanishWordAccent(syllables) {
         syllables[syllables.length - accentIndex].isAccented = true;
     }
 }
-
-var removeSolesmesMarkings = function (gabc) { return gabc === null || gabc === void 0 ? void 0 : gabc.replace(/(\S)[_']+\d?|\.+\d?$/g, "$1").replace(/(\.+\d?)\/+/gi, "//").replace(/(\.+\d?)!/gi, "/").replace(/(\.+\d?)/gi, ""); };
-var removeSolesmesMarkingsInMixedGabc = function (mixedGabc) { return mixedGabc === null || mixedGabc === void 0 ? void 0 : mixedGabc.replace(/\([^\)]+/g, removeSolesmesMarkings); };
 
 (function (VerseSegmentType) {
     VerseSegmentType["Flex"] = "flex";

@@ -1,3 +1,12 @@
+# [3.7.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.6.0...v3.7.0) (2021-09-15)
+
+
+### Features
+
+* Add removeSolesmes option to combine Text with Gabc function ([d32d99e](https://gitlab.com/sourceandsummit/gabc-utils/commit/d32d99e030ab212fcb8994ab211dd010e8127413))
+
+
+
 # [3.6.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.5.4...v3.6.0) (2021-09-14)
 
 
