@@ -1,3 +1,11 @@
+import { removeSolesmesMarkings } from "./removeSolesmesMarkings";
+
+export interface GabcSyllabifiedOptions {
+  isEaster?: boolean;
+  useLargeInitial?: boolean;
+  removeSolesmesMarkings?: boolean;
+}
+
 export class GabcSyllabified {
   /*-----  REGEX DEFS  -----*/
   static readonly regexClef = /^[cf]b?[1-4]$/;
@@ -5,9 +13,33 @@ export class GabcSyllabified {
   static readonly regexFindParensWithLeadSpaces = /^(\s*)\(([\s\S]*)\)$/;
   static readonly regexFindParens = /^\(([\s\S]*)\)$/;
 
-  static merge(syllabifiedText: string, musicalNotation: string, isEaster?: boolean, useLargeInitial: boolean = true) {
+  static merge(
+    syllabifiedText: string,
+    musicalNotation: string,
+    isEaster?: boolean,
+    useLargeInitial?: boolean
+  );
+  static merge(
+    syllabifiedText: string,
+    musicalNotation: string,
+    options?: GabcSyllabifiedOptions
+  );
+  static merge(
+    syllabifiedText: string,
+    musicalNotation: string,
+    isEaster?: GabcSyllabifiedOptions | boolean,
+    useLargeInitial: boolean = true
+  ) {
+    let removeSolesmesMarkings = false;
+    if (isEaster && typeof isEaster === 'object') {
+      ({
+        isEaster,
+        useLargeInitial = true,
+        removeSolesmesMarkings = false,
+      } = isEaster);
+    }
 
-    const { text, notation } = GabcSyllabified.normalizeInputs(syllabifiedText, musicalNotation, isEaster);
+    const { text, notation } = GabcSyllabified.normalizeInputs(syllabifiedText, musicalNotation, isEaster as boolean, removeSolesmesMarkings);
 
     if (!notation) return text;
 
@@ -35,7 +67,7 @@ export class GabcSyllabified {
   }
 
   /*-----  NORMALIZATION FUNCTIONS  -----*/
-  static normalizeInputs(text: string, notation: string, isEaster?: boolean) {
+  static normalizeInputs(text: string, notation: string, isEaster?: boolean, removeSolesmes?: boolean) {
     // normalize the text, getting rid of multiple consecutive whitespace,
     // and handling lilypond's \forceHyphen directive
     // remove flex and mediant symbols if accents are marked with pipes:
@@ -90,6 +122,9 @@ export class GabcSyllabified {
     ;
 
     notation = notation.replace(/%[^\n]*(\n|$)/g, '$1').trim();
+    if (removeSolesmes) {
+      notation = removeSolesmesMarkings(notation);
+    }
 
     return { text, notation }
   }

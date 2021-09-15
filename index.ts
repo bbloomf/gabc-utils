@@ -1,4 +1,4 @@
-export { GabcSyllabified } from "./lib/GabcSyllabified";
+export { GabcSyllabified, GabcSyllabifiedOptions } from "./lib/GabcSyllabified";
 
 export {
   GabcPsalmTones,
@@ -13,6 +13,7 @@ export {
   VerseText,
   VerseSegment,
   VerseTextArgs,
+  Language,
 } from "./lib/VerseText";
 
 export { GabcWithTitles, splitGabcByTitle } from "./lib/GabcWithTitles";
