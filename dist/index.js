@@ -43,8 +43,8 @@ var GabcSyllabified = /** @class */ (function () {
     GabcSyllabified.normalizeInputs = function (text, notation, isEaster, removeSolesmes) {
         // normalize the text, getting rid of multiple consecutive whitespace,
         // and handling lilypond's \forceHyphen directive
-        // remove flex and mediant symbols if accents are marked with pipes:
-        if (/\|/.test(text)) {
+        // remove flex and mediant symbols if any are present without parentheses:
+        if (/\s[†*]\s]/.test(text)) {
             text = text.replace(/\([†*]\)|[†*]/g, "");
         }
         text = text.replace(/\xad/g, "")

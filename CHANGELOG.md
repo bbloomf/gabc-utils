@@ -1,3 +1,12 @@
+## [3.7.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.7.0...v3.7.1) (2021-09-22)
+
+
+### Bug Fixes
+
+* Change condition for removal of flex and mediant symbols ([4a2d02e](https://gitlab.com/sourceandsummit/gabc-utils/commit/4a2d02e3f4b2c23e6240e146a321e9b9f945606a))
+
+
+
 # [3.7.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.6.0...v3.7.0) (2021-09-15)
 
 
