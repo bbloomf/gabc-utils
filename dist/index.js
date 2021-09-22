@@ -44,7 +44,7 @@ var GabcSyllabified = /** @class */ (function () {
         // normalize the text, getting rid of multiple consecutive whitespace,
         // and handling lilypond's \forceHyphen directive
         // remove flex and mediant symbols if any are present without parentheses:
-        if (/\s[†*]\s]/.test(text)) {
+        if (/\s[†*]\s/.test(text)) {
             text = text.replace(/\([†*]\)|[†*]/g, "");
         }
         text = text.replace(/\xad/g, "")

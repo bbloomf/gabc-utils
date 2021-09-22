@@ -1,3 +1,12 @@
+## [3.7.2](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.7.1...v3.7.2) (2021-09-22)
+
+
+### Bug Fixes
+
+* Fix regex bug ([7d262a8](https://gitlab.com/sourceandsummit/gabc-utils/commit/7d262a8f9b7a4d8d6908389072b08e842830754a))
+
+
+
 ## [3.7.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.7.0...v3.7.1) (2021-09-22)
 
 
