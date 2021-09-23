@@ -1,14 +1,33 @@
+import { getNoteForNumericValueAndClef } from "./getNoteForNumericValueAndClef";
+import { getNumericValueForNoteAndClef } from "./getNumericValueForNoteAndClef";
 import { removeSolesmesMarkings } from "./removeSolesmesMarkings";
 
 export interface GabcSyllabifiedOptions {
+  /**
+   * true to use E.T. alleluia at the end, false to remove it, undefined to include it with the E.T. before
+   */
   isEaster?: boolean;
+
+  /**
+   * true to use a large initial, and set up the capitalization of the second and sometimes third letter
+   */
   useLargeInitial?: boolean;
+
+  /**
+   * true to remove any Solesmes markings (ictus, episema, punctum mora)
+   */
   removeSolesmesMarkings?: boolean;
+
+  /**
+   * gabc melody that follows this one, to use to calculate a custos at the end for a clef change (if the followedByGabc starts with a different clef than the GABC being merged ends with).
+   */
+  followedByGabc?: string;
 }
 
 export class GabcSyllabified {
   /*-----  REGEX DEFS  -----*/
   static readonly regexClef = /^[cf]b?[1-4]$/;
+  static readonly regexAllClefs = /[cf]b?[1-4]/g;
   static readonly regexNonSyllabicGabc = /^([cf]b?[1-4]|[,;:`]+|[a-m]\+|[zZ]0?)+$/;
   static readonly regexFindParensWithLeadSpaces = /^(\s*)\(([\s\S]*)\)$/;
   static readonly regexFindParens = /^\(([\s\S]*)\)$/;
@@ -18,30 +37,57 @@ export class GabcSyllabified {
     musicalNotation: string,
     isEaster?: boolean,
     useLargeInitial?: boolean
-  );
+  ): string;
   static merge(
     syllabifiedText: string,
     musicalNotation: string,
     options?: GabcSyllabifiedOptions
-  );
+  ): string;
   static merge(
     syllabifiedText: string,
     musicalNotation: string,
     isEaster?: GabcSyllabifiedOptions | boolean,
     useLargeInitial: boolean = true
-  ) {
+  ): string {
     let removeSolesmesMarkings = false;
+    let followedByGabc = '';
     if (isEaster && typeof isEaster === 'object') {
       ({
         isEaster,
         useLargeInitial = true,
         removeSolesmesMarkings = false,
+        followedByGabc = ''
       } = isEaster);
     }
 
-    const { text, notation } = GabcSyllabified.normalizeInputs(syllabifiedText, musicalNotation, isEaster as boolean, removeSolesmesMarkings);
+    let { text, notation } = GabcSyllabified.normalizeInputs(syllabifiedText, musicalNotation, isEaster as boolean, removeSolesmesMarkings);
 
     if (!notation) return text;
+
+    if (followedByGabc) {
+      const clefsOfThisGabc = musicalNotation.match(this.regexAllClefs);
+      const lastClefOfThisGabc = clefsOfThisGabc?.[clefsOfThisGabc.length - 1];
+      const [clefOfNextGabc] = followedByGabc.match(this.regexAllClefs);
+      if (
+        lastClefOfThisGabc &&
+        clefOfNextGabc &&
+        lastClefOfThisGabc.length === clefOfNextGabc.length &&
+        lastClefOfThisGabc !== clefOfNextGabc
+      ) {
+        const lastNoteOfThisGabc = musicalNotation.replace(this.regexAllClefs,"").split('').reverse().join('').match(/[a-mA-M]/)?.[0];
+        const firstNoteOfNextGabc = followedByGabc.replace(this.regexAllClefs,"").match(/[a-mA-M]/)?.[0];
+        const lastNoteValue = getNumericValueForNoteAndClef(lastNoteOfThisGabc, lastClefOfThisGabc);
+        let nextNoteValue = getNumericValueForNoteAndClef(firstNoteOfNextGabc, clefOfNextGabc);
+        if (lastClefOfThisGabc[0] !== clefOfNextGabc[0]) {
+          while (Math.abs(nextNoteValue - lastNoteValue) > 6) {
+            const extraOffset = nextNoteValue > lastNoteValue ? -7 : 7;
+            nextNoteValue += extraOffset;
+          }
+        }
+        const custosLetter = getNoteForNumericValueAndClef(nextNoteValue, lastClefOfThisGabc);
+        notation = notation.replace(/\s::\s*$/, ` ${custosLetter}+::${clefOfNextGabc}`);
+      }
+    }
 
     const { syllables, notationNodes } = GabcSyllabified.splitInputs(text, notation);
 
