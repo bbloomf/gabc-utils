@@ -1,3 +1,12 @@
+# [3.8.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.7.2...v3.8.0) (2021-09-23)
+
+
+### Features
+
+* Add option to calculate custos at end of chant based on a chant that follows ([ebd8617](https://gitlab.com/sourceandsummit/gabc-utils/commit/ebd86173128a39de484c8f2bb4897dc4911cc829))
+
+
+
 ## [3.7.2](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.7.1...v3.7.2) (2021-09-22)
 
 

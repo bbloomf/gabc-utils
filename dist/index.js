@@ -1,5 +1,21 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
+function getNoteForNumericValueAndClef(numericValue, clef) {
+    var clefPosition = Number(clef.match(/\d+/)[0]) * 2 + 1;
+    var clefValue = clef.charCodeAt(0) - 'a'.charCodeAt(0);
+    // numericValue = noteInt - clefPosition + clefValue;
+    var noteInt = numericValue - clefValue + clefPosition;
+    // const noteInt = note.toLowerCase().charCodeAt(0) - 'a'.charCodeAt(0);
+    return String.fromCharCode('a'.charCodeAt(0) + noteInt);
+}
+
+function getNumericValueForNoteAndClef(note, clef) {
+    var noteInt = note.toLowerCase().charCodeAt(0) - 'a'.charCodeAt(0);
+    var clefPosition = Number(clef.match(/\d+/)[0]) * 2 + 1;
+    var clefValue = clef.charCodeAt(0) - 'a'.charCodeAt(0);
+    return noteInt - clefPosition + clefValue;
+}
+
 function removeSolesmesMarkings(gabc) {
     return gabc === null || gabc === void 0 ? void 0 : gabc.replace(/(\S)[_']+\d?|\.+\d?$/g, "$1").replace(/(\.+\d?)\/+/gi, "//").replace(/(\.+\d?)!/gi, "/").replace(/(\.+\d?)/gi, "");
 }
@@ -11,16 +27,40 @@ var GabcSyllabified = /** @class */ (function () {
     function GabcSyllabified() {
     }
     GabcSyllabified.merge = function (syllabifiedText, musicalNotation, isEaster, useLargeInitial) {
-        var _a, _b, _c;
+        var _a, _b, _c, _d;
+        var _e, _f;
         if (useLargeInitial === void 0) { useLargeInitial = true; }
         var removeSolesmesMarkings = false;
+        var followedByGabc = '';
         if (isEaster && typeof isEaster === 'object') {
-            (_a = isEaster, isEaster = _a.isEaster, _b = _a.useLargeInitial, useLargeInitial = _b === void 0 ? true : _b, _c = _a.removeSolesmesMarkings, removeSolesmesMarkings = _c === void 0 ? false : _c);
+            (_a = isEaster, isEaster = _a.isEaster, _b = _a.useLargeInitial, useLargeInitial = _b === void 0 ? true : _b, _c = _a.removeSolesmesMarkings, removeSolesmesMarkings = _c === void 0 ? false : _c, _d = _a.followedByGabc, followedByGabc = _d === void 0 ? '' : _d);
         }
-        var _d = GabcSyllabified.normalizeInputs(syllabifiedText, musicalNotation, isEaster, removeSolesmesMarkings), text = _d.text, notation = _d.notation;
+        var _g = GabcSyllabified.normalizeInputs(syllabifiedText, musicalNotation, isEaster, removeSolesmesMarkings), text = _g.text, notation = _g.notation;
         if (!notation)
             return text;
-        var _e = GabcSyllabified.splitInputs(text, notation), syllables = _e.syllables, notationNodes = _e.notationNodes;
+        if (followedByGabc) {
+            var clefsOfThisGabc = musicalNotation.match(this.regexAllClefs);
+            var lastClefOfThisGabc = clefsOfThisGabc === null || clefsOfThisGabc === void 0 ? void 0 : clefsOfThisGabc[clefsOfThisGabc.length - 1];
+            var clefOfNextGabc = followedByGabc.match(this.regexAllClefs)[0];
+            if (lastClefOfThisGabc &&
+                clefOfNextGabc &&
+                lastClefOfThisGabc.length === clefOfNextGabc.length &&
+                lastClefOfThisGabc !== clefOfNextGabc) {
+                var lastNoteOfThisGabc = (_e = musicalNotation.replace(this.regexAllClefs, "").split('').reverse().join('').match(/[a-mA-M]/)) === null || _e === void 0 ? void 0 : _e[0];
+                var firstNoteOfNextGabc = (_f = followedByGabc.replace(this.regexAllClefs, "").match(/[a-mA-M]/)) === null || _f === void 0 ? void 0 : _f[0];
+                var lastNoteValue = getNumericValueForNoteAndClef(lastNoteOfThisGabc, lastClefOfThisGabc);
+                var nextNoteValue = getNumericValueForNoteAndClef(firstNoteOfNextGabc, clefOfNextGabc);
+                if (lastClefOfThisGabc[0] !== clefOfNextGabc[0]) {
+                    while (Math.abs(nextNoteValue - lastNoteValue) > 6) {
+                        var extraOffset = nextNoteValue > lastNoteValue ? -7 : 7;
+                        nextNoteValue += extraOffset;
+                    }
+                }
+                var custosLetter = getNoteForNumericValueAndClef(nextNoteValue, lastClefOfThisGabc);
+                notation = notation.replace(/\s::\s*$/, " " + custosLetter + "+::" + clefOfNextGabc);
+            }
+        }
+        var _h = GabcSyllabified.splitInputs(text, notation), syllables = _h.syllables, notationNodes = _h.notationNodes;
         var sylNdx = 0;
         var isFirstSyl = true;
         var result = notationNodes
@@ -203,6 +243,7 @@ var GabcSyllabified = /** @class */ (function () {
     };
     /*-----  REGEX DEFS  -----*/
     GabcSyllabified.regexClef = /^[cf]b?[1-4]$/;
+    GabcSyllabified.regexAllClefs = /[cf]b?[1-4]/g;
     GabcSyllabified.regexNonSyllabicGabc = /^([cf]b?[1-4]|[,;:`]+|[a-m]\+|[zZ]0?)+$/;
     GabcSyllabified.regexFindParensWithLeadSpaces = /^(\s*)\(([\s\S]*)\)$/;
     GabcSyllabified.regexFindParens = /^\(([\s\S]*)\)$/;
