@@ -93,7 +93,17 @@ export declare class VerseSegment {
      * @param observePause observe pauses in the text that occur on the reciting tone
      * @returns GABC string
      */
-    withGabc(psalmTone: GabcPsalmTone, useIntonation?: boolean | GabcSingleTone[], useFlex?: boolean, stripFlexMediantSymbols?: boolean, useLargeInitial?: boolean, minSylsOnRecitingTone?: number, language?: string, observePause?: boolean, removeSolesmesMarkings?: boolean): string;
+    withGabc(psalmTone: GabcPsalmTone, { useIntonation, useFlex, stripFlexMediantSymbols, useLargeInitial, minSylsOnRecitingTone, language, observePause, removeSolesmesMarkings, failOnNoIntonation, }: {
+        useIntonation: boolean | GabcSingleTone[];
+        useFlex?: boolean;
+        stripFlexMediantSymbols?: boolean;
+        useLargeInitial?: boolean;
+        minSylsOnRecitingTone?: number;
+        language?: Language;
+        observePause?: boolean;
+        removeSolesmesMarkings?: boolean;
+        failOnNoIntonation?: boolean;
+    }): string | false;
     toString(): string;
     static splitIntoWords(text: string, syllabify?: Syllabifier, language?: Language): any[];
 }

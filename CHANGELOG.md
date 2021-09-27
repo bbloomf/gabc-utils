@@ -1,3 +1,12 @@
+# [3.9.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.8.0...v3.9.0) (2021-09-27)
+
+
+### Features
+
+* Treat flex as pause in solemn gregorian tones if there are not enough syllables to use the intonation otherwise ([09a863f](https://gitlab.com/sourceandsummit/gabc-utils/commit/09a863f1cc36454eb187a338160600d12bacc714))
+
+
+
 # [3.8.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.7.2...v3.8.0) (2021-09-23)
 
 

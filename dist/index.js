@@ -480,9 +480,11 @@ var VerseText = /** @class */ (function () {
                 intonationFollowingFlex = intonationFollowingFlex.slice(0, firstMediantTenor);
             }
         }
+        var forceNoIntonation = false;
         return (segments
             .map(function (seg, i, segments) {
             var _a;
+            var forceBar;
             var useFlex = seg.segmentType === exports.VerseSegmentType.Flex, segmentName = useFlex ? exports.VerseSegmentType.Mediant : seg.segmentType, tone = psalmTone[segmentName], intonation = false;
             if (psalmTone.isMeinrad) {
                 tone = psalmTone.lines[segments.length][i];
@@ -505,8 +507,47 @@ var VerseText = /** @class */ (function () {
                     intonation = intonationFollowingFlex;
                 }
             }
-            var gabc = seg.withGabc(tone, intonation || i == 0 || i == segments.length - 1, // use intonation on first and last segment, and when required by gregorian solemn tones
-            useFlex, stripFlexMediantSymbols, i === 0 && useLargeInitial, minSylsOnRecitingTone, _this.language, psalmTone.isGregorianSolemn, removeSolesmesMarkings);
+            if (forceNoIntonation) {
+                intonation = false;
+                // reset for next time:
+                forceNoIntonation = false;
+            }
+            var gabc = seg.withGabc(tone, {
+                useIntonation: intonation || i == 0 || i == segments.length - 1,
+                useFlex: useFlex,
+                stripFlexMediantSymbols: stripFlexMediantSymbols,
+                useLargeInitial: i === 0 && useLargeInitial,
+                minSylsOnRecitingTone: minSylsOnRecitingTone,
+                language: _this.language,
+                observePause: psalmTone.isGregorianSolemn,
+                removeSolesmesMarkings: removeSolesmesMarkings,
+                failOnNoIntonation: psalmTone.isGregorianSolemn && seg.segmentType === exports.VerseSegmentType.Flex,
+            });
+            if (gabc === false) {
+                // there were not enough syllables to use the intonation, so we treat it as a pause instead
+                var alteredTone = new GabcPsalmTone(tone);
+                alteredTone.gabc = __assign({}, alteredTone.gabc);
+                alteredTone.gabc.accents = [];
+                alteredTone.gabc.preparatory = [];
+                alteredTone.gabc.afterLastAccent = [];
+                gabc = seg.withGabc(alteredTone, {
+                    useIntonation: intonation || i == 0 || i == segments.length - 1,
+                    useFlex: useFlex,
+                    stripFlexMediantSymbols: stripFlexMediantSymbols,
+                    useLargeInitial: i === 0 && useLargeInitial,
+                    minSylsOnRecitingTone: minSylsOnRecitingTone,
+                    language: _this.language,
+                    observePause: psalmTone.isGregorianSolemn,
+                    removeSolesmesMarkings: removeSolesmesMarkings,
+                    failOnNoIntonation: false,
+                });
+                if (!removeSolesmesMarkings) {
+                    // add dot on last reciting tone:
+                    gabc = gabc.replace(/\)\s*$/, '.$&');
+                }
+                forceNoIntonation = true;
+                forceBar = ",";
+            }
             var bar;
             if (psalmTone.isMeinrad) {
                 if (i === 0) {
@@ -521,6 +562,9 @@ var VerseText = /** @class */ (function () {
             }
             else {
                 bar = barDictionary[seg.segmentType];
+            }
+            if (forceBar) {
+                bar = forceBar;
             }
             if (seg.segmentType === exports.VerseSegmentType.Termination) {
                 ++stanzaI;
@@ -691,22 +735,15 @@ var VerseSegment = /** @class */ (function () {
      * @param observePause observe pauses in the text that occur on the reciting tone
      * @returns GABC string
      */
-    VerseSegment.prototype.withGabc = function (psalmTone, useIntonation, useFlex, stripFlexMediantSymbols, useLargeInitial, minSylsOnRecitingTone, language, observePause, removeSolesmesMarkings) {
-        var _a;
-        var _this = this;
+    VerseSegment.prototype.withGabc = function (psalmTone, _a) {
         var _b;
-        if (useIntonation === void 0) { useIntonation = true; }
-        if (useFlex === void 0) { useFlex = false; }
-        if (stripFlexMediantSymbols === void 0) { stripFlexMediantSymbols = true; }
-        if (useLargeInitial === void 0) { useLargeInitial = false; }
-        if (minSylsOnRecitingTone === void 0) { minSylsOnRecitingTone = 2; }
-        if (language === void 0) { language = "en"; }
-        if (observePause === void 0) { observePause = false; }
-        if (removeSolesmesMarkings === void 0) { removeSolesmesMarkings = false; }
+        var _this = this;
+        var _c;
+        var _d = _a.useIntonation, useIntonation = _d === void 0 ? true : _d, _e = _a.useFlex, useFlex = _e === void 0 ? false : _e, _f = _a.stripFlexMediantSymbols, stripFlexMediantSymbols = _f === void 0 ? true : _f, _g = _a.useLargeInitial, useLargeInitial = _g === void 0 ? false : _g, _h = _a.minSylsOnRecitingTone, minSylsOnRecitingTone = _h === void 0 ? 2 : _h, _j = _a.language, language = _j === void 0 ? "en" : _j, _k = _a.observePause, observePause = _k === void 0 ? false : _k, _l = _a.removeSolesmesMarkings, removeSolesmesMarkings = _l === void 0 ? false : _l, _m = _a.failOnNoIntonation, failOnNoIntonation = _m === void 0 ? false : _m;
         if (this.syllables.length === 0) {
             return "";
         }
-        var syllables = this.syllables.slice(), _c = psalmTone.gabc, intonation = _c.intonation, preparatory = _c.preparatory, accents = _c.accents, afterLastAccent = _c.afterLastAccent, tenor = _c.tenor, flex = _c.flex, result = "";
+        var syllables = this.syllables.slice(), _o = psalmTone.gabc, intonation = _o.intonation, preparatory = _o.preparatory, accents = _o.accents, afterLastAccent = _o.afterLastAccent, tenor = _o.tenor, flex = _o.flex, result = "";
         if (useLargeInitial && !syllables[0].preText) {
             syllables = syllables.slice();
             var firstSyllable = syllables[0];
@@ -721,7 +758,7 @@ var VerseSegment = /** @class */ (function () {
             }
         }
         if (useFlex) {
-            (_a = psalmTone.getFlexTone(language), afterLastAccent = _a.afterLastAccent, preparatory = _a.preparatory, accents = _a.accents);
+            (_b = psalmTone.getFlexTone(language), afterLastAccent = _b.afterLastAccent, preparatory = _b.preparatory, accents = _b.accents);
         }
         var firstInterestingAccent = this.accentedSyllables[accents.length - 1], indexOfFirstInterestingAccent = firstInterestingAccent
             ? firstInterestingAccent.indexInSegment || 0
@@ -752,6 +789,9 @@ var VerseSegment = /** @class */ (function () {
                 ++syllablesOnRecitingTone;
             }
             if (syllablesOnRecitingTone < minSylsOnRecitingTone) {
+                if (failOnNoIntonation) {
+                    return false;
+                }
                 useIntonation = false;
             }
         }
@@ -772,7 +812,7 @@ var VerseSegment = /** @class */ (function () {
                         (syllable.firstOfWord && syllable.lastOfWord);
                 });
                 var accentIndex = lastUsableAccent === -1 ? -1 : syllablesToSearchForAccent.length - 1 - lastUsableAccent;
-                intonation = __spreadArrays(intonation.slice(0, intonationForkIndex), ((_b = fork[accentIndex]) !== null && _b !== void 0 ? _b : []), intonation.slice(intonationForkIndex + 1));
+                intonation = __spreadArrays(intonation.slice(0, intonationForkIndex), ((_c = fork[accentIndex]) !== null && _c !== void 0 ? _c : []), intonation.slice(intonationForkIndex + 1));
             }
             for (var i = 0; i < intonation.length; ++i) {
                 var syl = syllablesBeforePreparatory.shift();
@@ -1007,6 +1047,10 @@ var GabcPsalmTone = /** @class */ (function () {
         if (prefix === void 0) { prefix = ""; }
         if (flexEqualsTenor === void 0) { flexEqualsTenor = false; }
         if (clef === void 0) { clef = "c4"; }
+        if (typeof gabc === "object") {
+            Object.assign(this, gabc);
+            return;
+        }
         if (prefix)
             gabc = prefix + gabc;
         var tones = (this.tones = GabcPsalmTone.getTonesForGabcString(gabc));

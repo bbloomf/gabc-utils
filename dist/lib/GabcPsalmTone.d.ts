@@ -56,6 +56,6 @@ export declare class GabcPsalmTone {
     gabc: GabcInfo;
     syllableCounts: SyllableCounts;
     static readonly getTonesForGabcString: (gabc: any) => GabcSingleTone[];
-    constructor(gabc: string, prefix?: string, flexEqualsTenor?: boolean, clef?: string);
+    constructor(gabc: string | GabcPsalmTone, prefix?: string, flexEqualsTenor?: boolean, clef?: string);
 }
 export {};
