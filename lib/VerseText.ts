@@ -201,9 +201,11 @@ export class VerseText {
         );
       }
     }
+    let forceNoIntonation = false;
     return (
       segments
         .map((seg, i, segments) => {
+          let forceBar: string;
           let useFlex = seg.segmentType === VerseSegmentType.Flex,
             segmentName = useFlex ? VerseSegmentType.Mediant : seg.segmentType,
             tone = psalmTone[segmentName],
@@ -229,17 +231,47 @@ export class VerseText {
               intonation = intonationFollowingFlex;
             }
           }
-          let gabc = seg.withGabc(
-            tone,
-            intonation || i == 0 || i == segments.length - 1, // use intonation on first and last segment, and when required by gregorian solemn tones
+          if (forceNoIntonation) {
+            intonation = false;
+            // reset for next time:
+            forceNoIntonation = false;
+          }
+          let gabc = seg.withGabc(tone, {
+            useIntonation: intonation || i == 0 || i == segments.length - 1, // use intonation on first and last segment, and when required by gregorian solemn tones
             useFlex,
             stripFlexMediantSymbols,
-            i === 0 && useLargeInitial,
+            useLargeInitial: i === 0 && useLargeInitial,
             minSylsOnRecitingTone,
-            this.language,
-            psalmTone.isGregorianSolemn,
+            language: this.language,
+            observePause: psalmTone.isGregorianSolemn,
             removeSolesmesMarkings,
-          );
+            failOnNoIntonation: psalmTone.isGregorianSolemn && seg.segmentType === VerseSegmentType.Flex,
+          });
+          if (gabc === false) {
+            // there were not enough syllables to use the intonation, so we treat it as a pause instead
+            const alteredTone = new GabcPsalmTone(tone);
+            alteredTone.gabc = {...alteredTone.gabc};
+            alteredTone.gabc.accents = [];
+            alteredTone.gabc.preparatory = [];
+            alteredTone.gabc.afterLastAccent = [];
+            gabc = seg.withGabc(alteredTone, {
+              useIntonation: intonation || i == 0 || i == segments.length - 1,
+              useFlex,
+              stripFlexMediantSymbols,
+              useLargeInitial: i === 0 && useLargeInitial,
+              minSylsOnRecitingTone,
+              language: this.language,
+              observePause: psalmTone.isGregorianSolemn,
+              removeSolesmesMarkings,
+              failOnNoIntonation: false,
+            }) as string;
+            if (!removeSolesmesMarkings) {
+              // add dot on last reciting tone:
+              gabc = gabc.replace(/\)\s*$/, '.$&');
+            }
+            forceNoIntonation = true;
+            forceBar = ",";
+          }
           let bar: string;
           if (psalmTone.isMeinrad) {
             if (i === 0) {
@@ -251,6 +283,9 @@ export class VerseText {
             }
           } else {
             bar = barDictionary[seg.segmentType];
+          }
+          if (forceBar) {
+            bar = forceBar;
           }
           if (seg.segmentType === VerseSegmentType.Termination) {
             ++stanzaI;
@@ -464,17 +499,30 @@ export class VerseSegment {
    * @param observePause observe pauses in the text that occur on the reciting tone
    * @returns GABC string
    */
-  withGabc(
+   withGabc(
     psalmTone: GabcPsalmTone,
-    useIntonation: boolean | GabcSingleTone[] = true,
-    useFlex = false,
-    stripFlexMediantSymbols = true,
-    useLargeInitial = false,
-    minSylsOnRecitingTone = 2,
-    language = "en",
-    observePause = false,
-    removeSolesmesMarkings = false,
-  ) {
+    {
+      useIntonation = true,
+      useFlex = false,
+      stripFlexMediantSymbols = true,
+      useLargeInitial = false,
+      minSylsOnRecitingTone = 2,
+      language = "en",
+      observePause = false,
+      removeSolesmesMarkings = false,
+      failOnNoIntonation = false,
+    }: {
+      useIntonation: boolean | GabcSingleTone[];
+      useFlex?: boolean;
+      stripFlexMediantSymbols?: boolean;
+      useLargeInitial?: boolean;
+      minSylsOnRecitingTone?: number;
+      language?: Language;
+      observePause?: boolean;
+      removeSolesmesMarkings?: boolean;
+      failOnNoIntonation?: boolean;
+    }
+  ): string | false {
     if (this.syllables.length === 0) {
       return "";
     }
@@ -555,6 +603,9 @@ export class VerseSegment {
         ++syllablesOnRecitingTone;
       }
       if (syllablesOnRecitingTone < minSylsOnRecitingTone) {
+        if (failOnNoIntonation) {
+          return false;
+        }
         useIntonation = false;
       }
     }

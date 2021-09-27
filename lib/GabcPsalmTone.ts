@@ -249,7 +249,11 @@ export class GabcPsalmTone {
     return tones;
   };
 
-  constructor(gabc: string, prefix = "", flexEqualsTenor = false, clef = "c4") {
+  constructor(gabc: string | GabcPsalmTone, prefix = "", flexEqualsTenor = false, clef = "c4") {
+    if (typeof gabc === "object") {
+      Object.assign(this, gabc);
+      return;
+    }
     if (prefix) gabc = prefix + gabc;
     let tones = (this.tones = GabcPsalmTone.getTonesForGabcString(gabc));
     var intonation: GabcSingleTone[] = [];
