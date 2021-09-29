@@ -1,3 +1,12 @@
+## [3.9.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.9.0...v3.9.1) (2021-09-29)
+
+
+### Bug Fixes
+
+* **Easter Time directives:** Work with Latin T.P. easter time directives, and don't fail if a psalm tone has 2 accents but the text only has one available ([3eec9f4](https://gitlab.com/sourceandsummit/gabc-utils/commit/3eec9f44a41a0692515dcd9fe8169e32e71681c2))
+
+
+
 # [3.9.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.8.0...v3.9.0) (2021-09-27)
 
 

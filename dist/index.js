@@ -368,13 +368,13 @@ var VerseText = /** @class */ (function () {
         }
         if (isEaster) {
             text = text.replace(/\s*([†*]?)\s*\(([†*]?)\)/g, ' $2');
-            text = text.replace(/([,;:.!?])?(\s+[†*])?(\s)\s*\(E\.\s*T\.\s*([^)]+)\)/g, function (whole, punctuation, flexMediant, whitespace, alleluia) {
+            text = text.replace(/([,;:.!?])?(\s+[†*])?(\s)\s*\([ET]\.\s*[TP]\.\s*([^)]+)\)/g, function (whole, punctuation, flexMediant, whitespace, alleluia) {
                 return "" + (punctuation || ',') + flexMediant + whitespace + alleluia;
             });
         }
         else if (isEaster === false) {
             text = text.replace(/\s*([†*]?)\s*\(([†*]?)\)/g, ' $1');
-            text = text.replace(/\s*\(E\.\s*T\.[^)]+\)/g, '');
+            text = text.replace(/\s*\([ET]\.\s*[TP]\.[^)]+\)/g, '');
         }
         var stanzas = text.split(/\n\s*\n/);
         this.stanzas = stanzas.map(function (stanza) { return VerseText.splitIntoSegments(stanza, syllabify, language); });
@@ -759,6 +759,14 @@ var VerseSegment = /** @class */ (function () {
         }
         if (useFlex) {
             (_b = psalmTone.getFlexTone(language), afterLastAccent = _b.afterLastAccent, preparatory = _b.preparatory, accents = _b.accents);
+        }
+        if (accents.length > this.accentedSyllables.length) {
+            console.warn("not enough accents in text to properly apply psalm tone with " + accents.length + " accents: \"" + this.toString() + "\"");
+            // if there aren't enough accented syllables, cut out the ones from the tone that we don't have available to us
+            var unusedAccent = accents[accents.length - this.accentedSyllables.length - 1];
+            accents = accents.slice(-this.accentedSyllables.length);
+            // and get rid of any preparatory syllables
+            preparatory = unusedAccent.slice(1);
         }
         var firstInterestingAccent = this.accentedSyllables[accents.length - 1], indexOfFirstInterestingAccent = firstInterestingAccent
             ? firstInterestingAccent.indexInSegment || 0
