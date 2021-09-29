@@ -64,12 +64,12 @@ export class VerseText {
     }
     if (isEaster) {
       text = text.replace(/\s*([†*]?)\s*\(([†*]?)\)/g, ' $2');
-      text = text.replace(/([,;:.!?])?(\s+[†*])?(\s)\s*\(E\.\s*T\.\s*([^)]+)\)/g, (whole, punctuation, flexMediant, whitespace,alleluia) => {
+      text = text.replace(/([,;:.!?])?(\s+[†*])?(\s)\s*\([ET]\.\s*[TP]\.\s*([^)]+)\)/g, (whole, punctuation, flexMediant, whitespace,alleluia) => {
         return `${(punctuation || ',')}${flexMediant}${whitespace}${alleluia}`;
       });
     } else if (isEaster === false) {
       text = text.replace(/\s*([†*]?)\s*\(([†*]?)\)/g, ' $1');
-      text = text.replace(/\s*\(E\.\s*T\.[^)]+\)/g,'');
+      text = text.replace(/\s*\([ET]\.\s*[TP]\.[^)]+\)/g,'');
     }
     const stanzas = text.split(/\n\s*\n/);
     this.stanzas = stanzas.map(stanza => VerseText.splitIntoSegments(stanza, syllabify, language));
@@ -557,6 +557,14 @@ export class VerseSegment {
     }
     if (useFlex) {
       ({ afterLastAccent, preparatory, accents } = psalmTone.getFlexTone(language));
+    }
+    if (accents.length > this.accentedSyllables.length) {
+      console.warn(`not enough accents in text to properly apply psalm tone with ${accents.length} accents: "${this.toString()}"`)
+      // if there aren't enough accented syllables, cut out the ones from the tone that we don't have available to us
+      const unusedAccent = accents[accents.length - this.accentedSyllables.length - 1];
+      accents = accents.slice(-this.accentedSyllables.length);
+      // and get rid of any preparatory syllables
+      preparatory = unusedAccent.slice(1);
     }
     let firstInterestingAccent = this.accentedSyllables[
         accents.length - 1
