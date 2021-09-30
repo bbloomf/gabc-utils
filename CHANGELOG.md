@@ -1,3 +1,12 @@
+## [3.9.2](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.9.1...v3.9.2) (2021-09-30)
+
+
+### Bug Fixes
+
+* Fix an issue with centering syllables with a non-breaking space (~) ([1ab74e2](https://gitlab.com/sourceandsummit/gabc-utils/commit/1ab74e2a7289ffacb259c34c23f1e83c9d6105ab))
+
+
+
 ## [3.9.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.9.0...v3.9.1) (2021-09-29)
 
 

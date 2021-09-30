@@ -129,7 +129,7 @@ var GabcSyllabified = /** @class */ (function () {
             .replace(/\\forceHyphen\s+(\S+)\s+--\s+/g, '$1-')
             .replace(/\|([^|]+)\|/g, '+$1+')
             .replace(/([ -])\+|\+([^a-záéíóúýàèìòùäëïöüÿæœǽœ́]*(?:[-\s]|$))/ig, '$1$2')
-            .replace(/(^|\s)([^{}\s]+~[^{}\s]+)(?=$|\s)/g, '$1{$2}')
+            .replace(/(^|[\s+])([^{}\s+]+~[^{}\s+]+)(?=$|[\s+])/g, '$1{$2}') // center notes around undertie syllables
             .trim();
         notation = notation.replace(/%[^\n]*(\n|$)/g, '$1').trim();
         if (removeSolesmes) {

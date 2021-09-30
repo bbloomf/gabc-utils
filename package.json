@@ -1,6 +1,6 @@
 {
   "name": "gabc-utils",
-  "version": "3.9.1",
+  "version": "3.9.2",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
