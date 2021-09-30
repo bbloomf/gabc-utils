@@ -163,7 +163,7 @@ export class GabcSyllabified {
       .replace(/\\forceHyphen\s+(\S+)\s+--\s+/g, '$1-')
       .replace(/\|([^|]+)\|/g, '+$1+')
       .replace(/([ -])\+|\+([^a-záéíóúýàèìòùäëïöüÿæœǽœ́]*(?:[-\s]|$))/ig, '$1$2')
-      .replace(/(^|\s)([^{}\s]+~[^{}\s]+)(?=$|\s)/g,'$1{$2}')
+      .replace(/(^|[\s+])([^{}\s+]+~[^{}\s+]+)(?=$|[\s+])/g,'$1{$2}') // center notes around undertie syllables
       .trim()
     ;
 
