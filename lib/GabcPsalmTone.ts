@@ -4,6 +4,7 @@ import { shiftGabc } from "./shiftGabc";
 export type GabcPsalmTones = GabcPsalmToneChunk & {
   lines?: (GabcPsalmToneChunk | GabcPsalmTone[])[];
   isMeinrad: boolean;
+  useFlex: boolean;
   isGregorianSolemn?: boolean;
   originalGabc?: string;
   clef: string;
@@ -195,6 +196,7 @@ export class GabcPsalmTone {
       [VerseSegmentType.Termination]: gabcPsalmTones[1],
       isMeinrad,
       isGregorianSolemn,
+      useFlex,
       originalGabc,
       clef
     };
@@ -215,7 +217,9 @@ export class GabcPsalmTone {
         const psalmTones: GabcPsalmTones = {
           [VerseSegmentType.Mediant]: gabcPsalmTones[i],
           [VerseSegmentType.Termination]: gabcPsalmTones[i + 1],
-          isMeinrad: false,
+          isMeinrad,
+          useFlex,
+          isGregorianSolemn,
           clef
         };
         lines.push(psalmTones);
