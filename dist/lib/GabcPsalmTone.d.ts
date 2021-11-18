@@ -2,6 +2,7 @@ import { VerseSegmentType } from "./VerseText";
 export declare type GabcPsalmTones = GabcPsalmToneChunk & {
     lines?: (GabcPsalmToneChunk | GabcPsalmTone[])[];
     isMeinrad: boolean;
+    useFlex: boolean;
     isGregorianSolemn?: boolean;
     originalGabc?: string;
     clef: string;

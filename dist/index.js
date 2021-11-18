@@ -1305,6 +1305,7 @@ var GabcPsalmTone = /** @class */ (function () {
             _a[exports.VerseSegmentType.Termination] = gabcPsalmTones[1],
             _a.isMeinrad = isMeinrad,
             _a.isGregorianSolemn = isGregorianSolemn,
+            _a.useFlex = useFlex,
             _a.originalGabc = originalGabc,
             _a.clef = clef,
             _a);
@@ -1324,7 +1325,9 @@ var GabcPsalmTone = /** @class */ (function () {
                 var psalmTones = (_b = {},
                     _b[exports.VerseSegmentType.Mediant] = gabcPsalmTones[i],
                     _b[exports.VerseSegmentType.Termination] = gabcPsalmTones[i + 1],
-                    _b.isMeinrad = false,
+                    _b.isMeinrad = isMeinrad,
+                    _b.useFlex = useFlex,
+                    _b.isGregorianSolemn = isGregorianSolemn,
                     _b.clef = clef,
                     _b);
                 lines.push(psalmTones);

@@ -1,3 +1,12 @@
+# [3.10.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.9.2...v3.10.0) (2021-11-18)
+
+
+### Features
+
+* Add useFlex property to GabcPsalmTones ([f4cf3bd](https://gitlab.com/sourceandsummit/gabc-utils/commit/f4cf3bda41a6b3eb68a4ef68001b403e82901352))
+
+
+
 ## [3.9.2](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.9.1...v3.9.2) (2021-09-30)
 
 
