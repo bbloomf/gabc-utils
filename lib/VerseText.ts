@@ -64,9 +64,11 @@ export class VerseText {
     }
     if (isEaster) {
       text = text.replace(/\s*([†*]?)\s*\(([†*]?)\)/g, ' $2');
-      text = text.replace(/([,;:.!?])?(\s+[†*])?(\s)\s*\([ET]\.\s*[TP]\.\s*([^)]+)\)/g, (whole, punctuation, flexMediant, whitespace,alleluia) => {
-        return `${(punctuation || ',')}${flexMediant}${whitespace}${alleluia}`;
-      });
+      text = text.replace(
+        /([,;:.!?])?(\s+[†*])?(\s)\s*\([ET]\.\s*[TP]\.\s*([^)]+)\)/g,
+        (_, punctuation, flexMediant, whitespace, alleluia) =>
+          `${punctuation || ","}${flexMediant || ""}${whitespace}${alleluia}`
+      );
     } else if (isEaster === false) {
       text = text.replace(/\s*([†*]?)\s*\(([†*]?)\)/g, ' $1');
       text = text.replace(/\s*\([ET]\.\s*[TP]\.[^)]+\)/g,'');
