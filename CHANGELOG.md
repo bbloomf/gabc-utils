@@ -1,3 +1,12 @@
+## [3.10.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.10.0...v3.10.1) (2022-01-05)
+
+
+### Bug Fixes
+
+* **Easter Time directives:** Fix an issue with easter time directives during easter time ([22fb657](https://gitlab.com/sourceandsummit/gabc-utils/commit/22fb657c7ee2d30520c191d5f23fb0b81966bae2))
+
+
+
 # [3.10.0](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.9.2...v3.10.0) (2021-11-18)
 
 
