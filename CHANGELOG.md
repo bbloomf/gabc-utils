@@ -1,3 +1,12 @@
+## [3.10.2](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.10.1...v3.10.2) (2022-09-26)
+
+
+### Bug Fixes
+
+* Fix an issue with hyphen coming immediately before stressed syllable ([65787a8](https://gitlab.com/sourceandsummit/gabc-utils/commit/65787a81f1373397fa52ce0b0dd3ec14bde37ae9))
+
+
+
 ## [3.10.1](https://gitlab.com/sourceandsummit/gabc-utils/compare/v3.10.0...v3.10.1) (2022-01-05)
 
 

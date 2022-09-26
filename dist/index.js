@@ -87,8 +87,8 @@ var GabcSyllabified = /** @class */ (function () {
         if (/\s[†*]\s/.test(text)) {
             text = text.replace(/\([†*]\)|[†*]/g, "");
         }
-        text = text.replace(/\xad/g, "")
-            .replace(/\xa0/g, " ");
+        text = text.replace(/\xad/g, "") // remove soft hyphen
+            .replace(/\xa0/g, " "); // remove non-breaking space
         var notationMatch = null;
         var regexEasterTime = /\s*\([ET]\.\s*[TP]\.([^)]+)\)[.!]?\s*$/;
         var matchEasterTime = regexEasterTime.exec(text);
@@ -616,7 +616,7 @@ var VerseText = /** @class */ (function () {
             .replace(/\s+--\s+/g, "+")
             .replace(/(\|\S+\|)(\S)/gi, "$1+$2")
             .replace(/(\S)(\|\S+\|)/gi, "$1+$2")
-            .replace(/(\S-)(\S)/gi, "$1+$2")
+            .replace(/(\S-)\+?(\S)/gi, "$1+$2")
             .split(/\+/g);
     };
     return VerseText;
