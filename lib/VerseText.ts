@@ -42,7 +42,7 @@ export class VerseText {
       .replace(/\s+--\s+/g, "+")
       .replace(/(\|\S+\|)(\S)/gi, "$1+$2")
       .replace(/(\S)(\|\S+\|)/gi, "$1+$2")
-      .replace(/(\S-)(\S)/gi, "$1+$2")
+      .replace(/(\S-)\+?(\S)/gi, "$1+$2")
       .split(/\+/g);
   segments: VerseSegment[];
   stanzas: VerseSegment[][];

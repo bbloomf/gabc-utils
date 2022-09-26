@@ -121,8 +121,8 @@ export class GabcSyllabified {
       text = text.replace(/\([†*]\)|[†*]/g, "");
     }
 
-    text = text.replace(/\xad/g, "")
-      .replace(/\xa0/g, " ");
+    text = text.replace(/\xad/g, "") // remove soft hyphen
+      .replace(/\xa0/g, " "); // remove non-breaking space
     let notationMatch: RegExpMatchArray | null = null;
     const regexEasterTime = /\s*\([ET]\.\s*[TP]\.([^)]+)\)[.!]?\s*$/;
     const matchEasterTime = regexEasterTime.exec(text);
